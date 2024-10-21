@@ -26,27 +26,85 @@ namespace HamAndCheeseToastie.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public async Task<IActionResult> getSingleProduct(int id)
         {
-            return Ok();
+
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.ID == id);
+
+            if (product == null)
+            {
+                return NotFound(); // Return 404 if product is not found
+            }
+
+            return Ok(product);
         }
 
+        // POST: api/Product
         [HttpPost]
-        public IActionResult Post()
+        public async Task<IActionResult> Post([FromBody] Product product)
         {
-            return StatusCode(StatusCodes.Status201Created);
+            if (product == null)
+            {
+                return BadRequest("Product is null"); // Return 400 if product is null
+            }
+
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            return StatusCode(StatusCodes.Status201Created, product); // Return 201 Created with the product
+
         }
 
+
+
+        // PUT: api/Product/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id)
+        public async Task<IActionResult> Put(int id, [FromBody] Product product)
         {
-            return Ok();
+            if (product == null)
+            {
+                return BadRequest("Product is null"); // Return 400 if product is null
+            }
+
+            var productToUpdate = await _context.Products.FirstOrDefaultAsync(p => p.ID == id);
+
+            if (productToUpdate == null)
+            {
+                return NotFound(); // Return 404 if product is not found
+            }
+
+            // Update product fields
+            productToUpdate.Name = product.Name;
+            productToUpdate.Description = product.Description;
+            productToUpdate.Weight = product.Weight;
+            productToUpdate.Category = product.Category;
+            productToUpdate.CurrentStockLevel = product.CurrentStockLevel;
+            productToUpdate.MinimumStockLevel = product.MinimumStockLevel;
+            productToUpdate.Price = product.Price;
+            productToUpdate.WholesalePrice = product.WholesalePrice;
+            productToUpdate.EAN13Barcode = product.EAN13Barcode;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Return 204 No Content as the update is successful
         }
 
+
+        // DELETE: api/Product/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            return Ok();
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.ID == id);
+
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }
