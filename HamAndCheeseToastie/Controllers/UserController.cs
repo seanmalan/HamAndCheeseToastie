@@ -23,7 +23,7 @@ namespace HamAndCheeseToastie.Controllers
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _context.Users.ToListAsync();
-            return Ok(users); // Return the list of users
+            return Ok(users); // Return 200 OK with the list of users
         }
 
         // GET: api/User/5
@@ -34,10 +34,10 @@ namespace HamAndCheeseToastie.Controllers
 
             if (user == null)
             {
-                return NotFound(); // Return 404 if user is not found
+                return NotFound(new { message = "User not found" }); // Return 404 if user is not found
             }
 
-            return Ok(user); // Return 200 with the found user
+            return Ok(user); // Return 200 OK with the found user
         }
 
         // POST: api/User
@@ -46,13 +46,14 @@ namespace HamAndCheeseToastie.Controllers
         {
             if (user == null)
             {
-                return BadRequest("User is null"); // Return 400 if user is null
+                return BadRequest(new { message = "User data is required" }); // Return 400 Bad Request if user is null
             }
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return StatusCode(StatusCodes.Status201Created, user); // Return 201 Created with the user
+            // Return 201 Created with the location of the new user and the user data
+            return CreatedAtAction(nameof(Get), new { id = user.Id }, user);
         }
 
         // PUT: api/User/5
@@ -61,14 +62,14 @@ namespace HamAndCheeseToastie.Controllers
         {
             if (user == null)
             {
-                return BadRequest("User is null"); // Return 400 if user is null
+                return BadRequest(new { message = "User data is required" }); // Return 400 Bad Request if user is null
             }
 
             var userToUpdate = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
 
             if (userToUpdate == null)
             {
-                return NotFound(); // Return 404 if user is not found
+                return NotFound(new { message = "User not found" }); // Return 404 if user is not found
             }
 
             // Update user fields
@@ -76,10 +77,11 @@ namespace HamAndCheeseToastie.Controllers
             userToUpdate.Email = user.Email;
             userToUpdate.Password = user.Password;
             userToUpdate.Role = user.Role;
+            userToUpdate.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
 
-            return NoContent(); // Return 204 No Content as the update is successful
+            return Ok(userToUpdate); // Return 200 OK with the updated user
         }
 
         // DELETE: api/User/5
@@ -90,13 +92,13 @@ namespace HamAndCheeseToastie.Controllers
 
             if (user == null)
             {
-                return NotFound(); // Return 404 if user is not found
+                return NotFound(new { message = "User not found" }); // Return 404 if user is not found
             }
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
-            return NoContent(); // Return 204 No Content after successful deletion
+            return Ok(new { message = "User deleted successfully" }); // Return 200 OK with confirmation message
         }
     }
 }
