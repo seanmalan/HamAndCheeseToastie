@@ -1,7 +1,12 @@
-﻿namespace HamAndCheeseToastie.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace HamAndCheeseToastie.Models
 {
     public class TransactionItem
     {
+        [Key]
+        public int Id { get; set; }
         public int TransactionItemId { get; set; }              // Unique ID for the transaction item
         public int TransactionId { get; set; }                  // Reference to the transaction
         public Transaction Transaction { get; set; }            // Relationship to the main transaction

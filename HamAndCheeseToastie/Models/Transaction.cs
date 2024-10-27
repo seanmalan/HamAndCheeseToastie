@@ -1,7 +1,12 @@
-﻿namespace HamAndCheeseToastie.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+
+namespace HamAndCheeseToastie.Models
 {
     public class Transaction
     {
+
+        [Key]
         public int TransactionId { get; set; }                    // Unique ID for the transaction
         public DateTime TransactionDate { get; set; }             // Date and time of the transaction
         public decimal TotalAmount { get; set; }                  // Total amount of the transaction

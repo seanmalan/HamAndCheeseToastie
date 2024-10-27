@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,9 +22,10 @@ namespace HamAndCheeseToastie.Controllers
 
         // GET: api/Transaction
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Transaction>>> GetTransaction()
+        public async Task<IActionResult> GetTransactions()
         {
-            return await _context.Transaction.ToListAsync();
+            var transactions = await _context.Transaction.ToListAsync();
+            return Ok(transactions);
         }
 
         // GET: api/Transaction/5
@@ -36,20 +36,25 @@ namespace HamAndCheeseToastie.Controllers
 
             if (transaction == null)
             {
-                return NotFound();
+                return NotFound(new { Message = $"Transaction with ID {id} not found." });
             }
 
-            return transaction;
+            return Ok(transaction);
         }
 
         // PUT: api/Transaction/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTransaction(int id, Transaction transaction)
+        public async Task<IActionResult> PutTransaction(int id, [FromBody] Transaction transaction)
         {
             if (id != transaction.TransactionId)
             {
-                return BadRequest();
+                return BadRequest(new { Message = "Transaction ID mismatch." });
+            }
+
+            // Validate the transaction (you can add custom validation here)
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
             }
 
             _context.Entry(transaction).State = EntityState.Modified;
@@ -62,26 +67,28 @@ namespace HamAndCheeseToastie.Controllers
             {
                 if (!TransactionExists(id))
                 {
-                    return NotFound();
+                    return NotFound(new { Message = $"Transaction with ID {id} not found." });
                 }
-                else
-                {
-                    throw;
-                }
+                throw; // Rethrow if there's a concurrency issue not related to existence
             }
 
             return NoContent();
         }
 
         // POST: api/Transaction
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Transaction>> PostTransaction(Transaction transaction)
+        public async Task<ActionResult<Transaction>> PostTransaction([FromBody] Transaction transaction)
         {
+            // Validate the transaction (you can add custom validation here)
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _context.Transaction.Add(transaction);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetTransaction", new { id = transaction.TransactionId }, transaction);
+            return CreatedAtAction(nameof(GetTransaction), new { id = transaction.TransactionId }, transaction);
         }
 
         // DELETE: api/Transaction/5
@@ -91,7 +98,7 @@ namespace HamAndCheeseToastie.Controllers
             var transaction = await _context.Transaction.FindAsync(id);
             if (transaction == null)
             {
-                return NotFound();
+                return NotFound(new { Message = $"Transaction with ID {id} not found." });
             }
 
             _context.Transaction.Remove(transaction);
