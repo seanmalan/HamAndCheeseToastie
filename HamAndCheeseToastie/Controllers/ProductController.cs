@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using HamAndCheeseToastie.Models;
 using HamAndCheeseToastie.Database;
 using Microsoft.EntityFrameworkCore;
+using HamAndCheeseToastie.Services;
+using System.IO;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 
 namespace HamAndCheeseToastie.Controllers
 {
@@ -11,10 +15,14 @@ namespace HamAndCheeseToastie.Controllers
     public class ProductController : ControllerBase
     {
         private readonly DatabaseContext _context;
+        private readonly ICsvReader _csvReader;
+        private readonly IWebHostEnvironment _environment;
 
-        public ProductController(DatabaseContext context)
+        public ProductController(DatabaseContext context, ICsvReader csvReader, IWebHostEnvironment environment)
         {
             _context = context;
+            _csvReader = csvReader;
+            _environment = environment;
         }
 
         [HttpGet]
@@ -41,25 +49,40 @@ namespace HamAndCheeseToastie.Controllers
 
         // POST: api/Product
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Product product)
+        public async Task<IActionResult> Post([FromForm] Product product, IFormFile imageFile)
         {
             if (product == null)
             {
-                return BadRequest("Product is null"); // Return 400 if product is null
+                return BadRequest("Product data is required");
+            }
+
+            // Handle image upload
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var filePath = Path.Combine(_environment.WebRootPath, "images", imageFile.FileName);
+
+                // Save image to the specified path
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(stream);
+                }
+
+                // Store the image path in the database
+                product.ImagePath = $"/images/{imageFile.FileName}";
             }
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return StatusCode(StatusCodes.Status201Created, product); // Return 201 Created with the product
-
+            return CreatedAtAction(nameof(Get), new { id = product.Id }, product);
         }
+
 
 
 
         // PUT: api/Product/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] Product product)
+        public async Task<IActionResult> Put(int id, [FromBody] Product product, IFormFile imageFile)
         {
             if (product == null)
             {
@@ -75,7 +98,7 @@ namespace HamAndCheeseToastie.Controllers
 
             // Update product fields
             productToUpdate.Name = product.Name;
-            productToUpdate.Description = product.Description;
+            productToUpdate.BrandName = product.BrandName;
             productToUpdate.Weight = product.Weight;
             productToUpdate.Category = product.Category;
             productToUpdate.CurrentStockLevel = product.CurrentStockLevel;
@@ -83,6 +106,22 @@ namespace HamAndCheeseToastie.Controllers
             productToUpdate.Price = product.Price;
             productToUpdate.WholesalePrice = product.WholesalePrice;
             productToUpdate.EAN13Barcode = product.EAN13Barcode;
+
+
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var filePath = Path.Combine(_environment.WebRootPath, "images", imageFile.FileName);
+
+                // Save the new image
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(stream);
+                }
+
+                // Update image path
+                productToUpdate.ImagePath = $"/images/{imageFile.FileName}";
+            }
+
 
             await _context.SaveChangesAsync();
 
@@ -106,5 +145,32 @@ namespace HamAndCheeseToastie.Controllers
 
             return NoContent();
         }
+
+
+        [HttpPost("csv-upload")]
+        public async Task<IActionResult> UploadCSV(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded");
+            }
+
+            using (var reader = new StreamReader(file.OpenReadStream()))
+            {
+                var products = _csvReader.ImportCsv(reader);
+
+                if (products == null || !products.Any())
+                {
+                    return BadRequest("Invalid or empty CSV file");
+                }
+
+                // Bulk insert into the database
+                _context.Products.AddRange(products);
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new { Message = "Products imported successfully" });
+        }
+
     }
 }
