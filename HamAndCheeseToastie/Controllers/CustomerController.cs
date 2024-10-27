@@ -23,9 +23,11 @@ namespace HamAndCheeseToastie.Controllers
 
         // GET: api/Customer
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Customer>>> GetCustomer()
+        public async Task<IActionResult> GetCustomer()
         {
-            return await _context.Customer.ToListAsync();
+            var products = await _context.Customer.ToListAsync();
+
+            return Ok(products);
         }
 
         // GET: api/Customer/5

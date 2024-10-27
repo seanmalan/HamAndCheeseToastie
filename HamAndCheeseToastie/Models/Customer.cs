@@ -1,7 +1,11 @@
-﻿namespace HamAndCheeseToastie.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace HamAndCheeseToastie.Models
 {
     public class Customer
     {
+        [Key]
         public int CustomerId { get; set; }               // Unique ID for the customer
         public string FirstName { get; set; }             // Customer's first name
         public string LastName { get; set; }              // Customer's last name
