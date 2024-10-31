@@ -32,24 +32,17 @@ namespace HamAndCheeseToastie.Controllers
             }
         }
 
-        // GET: api/Category/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetCategoryByIdAsync(int id)
+        // GET: api/Product/category/{category_id}
+        [HttpGet("{category_id}")]
+        public async Task<IActionResult> GetProductsByCategory(int category_id)
         {
-            try
-            {
-                var category = await _context.Categories.FindAsync(id);
-                if (category == null)
-                {
-                    return NotFound(new { message = "Category not found" });
-                }
-                return Ok(category);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
-            }
+            var products = await _context.Products
+                .Where(p => p.Category_id == category_id)
+                .ToListAsync();
+
+            return Ok(products);
         }
+
 
         // POST: api/Category
         [HttpPost]

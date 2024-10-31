@@ -7,6 +7,8 @@ using HamAndCheeseToastie.Services;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using HamAndCheeseToastie.DTOs;
+
 
 namespace HamAndCheeseToastie.Controllers
 {
@@ -28,7 +30,24 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllProducts()
         {
-            var products = await _context.Products.ToListAsync();
+            var products = await _context.Products
+                .Include(p => p.Category) // Include Category to fetch the name
+                .Select(p => new ProductDto
+                {
+                    ID = p.ID,
+                    Name = p.Name,
+                    BrandName = p.BrandName,
+                    Weight = p.Weight,
+                    Category_id = p.Category_id,
+                    CategoryName = p.Category.Name, // Get Category Name
+                    CurrentStockLevel = p.CurrentStockLevel,
+                    MinimumStockLevel = p.MinimumStockLevel,
+                    Price = p.Price,
+                    WholesalePrice = p.WholesalePrice,
+                    EAN13Barcode = p.EAN13Barcode,
+                    ImagePath = p.ImagePath
+                })
+                .ToListAsync();
 
             return Ok(products);
         }
@@ -36,8 +55,25 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> getSingleProduct(int id)
         {
-
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.ID == id);
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Where(p => p.ID == id)
+                .Select(p => new ProductDto
+                {
+                    ID = p.ID,
+                    Name = p.Name,
+                    BrandName = p.BrandName,
+                    Weight = p.Weight,
+                    Category_id = p.Category_id,
+                    CategoryName = p.Category.Name, // Get Category Name
+                    CurrentStockLevel = p.CurrentStockLevel,
+                    MinimumStockLevel = p.MinimumStockLevel,
+                    Price = p.Price,
+                    WholesalePrice = p.WholesalePrice,
+                    EAN13Barcode = p.EAN13Barcode,
+                    ImagePath = p.ImagePath
+                })
+                .FirstOrDefaultAsync();
 
             if (product == null)
             {
@@ -46,6 +82,7 @@ namespace HamAndCheeseToastie.Controllers
 
             return Ok(product);
         }
+
 
         // POST: api/Product
         [HttpPost]
@@ -74,11 +111,8 @@ namespace HamAndCheeseToastie.Controllers
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(Get), new { id = product.Id }, product);
+            return CreatedAtAction(nameof(getSingleProduct), new { id = product.ID }, product);
         }
-
-
-
 
         // PUT: api/Product/5
         [HttpPut("{id}")]
@@ -100,13 +134,12 @@ namespace HamAndCheeseToastie.Controllers
             productToUpdate.Name = product.Name;
             productToUpdate.BrandName = product.BrandName;
             productToUpdate.Weight = product.Weight;
-            productToUpdate.Category = product.Category;
+            productToUpdate.Category_id = product.Category_id;
             productToUpdate.CurrentStockLevel = product.CurrentStockLevel;
             productToUpdate.MinimumStockLevel = product.MinimumStockLevel;
             productToUpdate.Price = product.Price;
             productToUpdate.WholesalePrice = product.WholesalePrice;
             productToUpdate.EAN13Barcode = product.EAN13Barcode;
-
 
             if (imageFile != null && imageFile.Length > 0)
             {
@@ -122,12 +155,10 @@ namespace HamAndCheeseToastie.Controllers
                 productToUpdate.ImagePath = $"/images/{imageFile.FileName}";
             }
 
-
             await _context.SaveChangesAsync();
 
             return NoContent(); // Return 204 No Content as the update is successful
         }
-
 
         // DELETE: api/Product/5
         [HttpDelete("{id}")]
@@ -145,7 +176,6 @@ namespace HamAndCheeseToastie.Controllers
 
             return NoContent();
         }
-
 
         [HttpPost("csv-upload")]
         public async Task<IActionResult> UploadCSV(IFormFile file)
@@ -171,6 +201,5 @@ namespace HamAndCheeseToastie.Controllers
 
             return Ok(new { Message = "Products imported successfully" });
         }
-
     }
 }

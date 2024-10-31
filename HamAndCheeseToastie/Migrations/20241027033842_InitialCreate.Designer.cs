@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HamAndCheeseToastie.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20241021225421_CreatesTransactionTables")]
-    partial class CreatesTransactionTables
+    [Migration("20241027033842_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,14 @@ namespace HamAndCheeseToastie.Migrations
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Cashier", b =>
                 {
-                    b.Property<int>("CashierId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CashierId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CashierId")
+                        .HasColumnType("int");
 
                     b.Property<string>("EmployeeCode")
                         .IsRequired()
@@ -45,7 +48,7 @@ namespace HamAndCheeseToastie.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("CashierId");
+                    b.HasKey("Id");
 
                     b.ToTable("Cashier");
                 });
@@ -107,6 +110,10 @@ namespace HamAndCheeseToastie.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
 
+                    b.Property<string>("BrandName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -114,11 +121,11 @@ namespace HamAndCheeseToastie.Migrations
                     b.Property<int>("CurrentStockLevel")
                         .HasColumnType("int");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("EAN13Barcode")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("EAN13Barcode")
+                    b.Property<string>("ImagePath")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -201,11 +208,11 @@ namespace HamAndCheeseToastie.Migrations
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.TransactionItem", b =>
                 {
-                    b.Property<int>("TransactionItemId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransactionItemId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
@@ -219,10 +226,13 @@ namespace HamAndCheeseToastie.Migrations
                     b.Property<int>("TransactionId")
                         .HasColumnType("int");
 
+                    b.Property<int>("TransactionItemId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("TransactionItemId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ProductId");
 

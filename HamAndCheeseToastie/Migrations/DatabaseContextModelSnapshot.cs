@@ -122,6 +122,10 @@ namespace HamAndCheeseToastie.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("MinimumStockLevel")
                         .HasColumnType("int");
 
