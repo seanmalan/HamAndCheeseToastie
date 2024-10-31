@@ -1,4 +1,5 @@
 ﻿using HamAndCheeseToastie.Database;
+using HamAndCheeseToastie.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +10,6 @@ namespace HamAndCheeseToastie.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
-
-
         private readonly DatabaseContext _context;
 
         public CategoryController(DatabaseContext context)
@@ -18,37 +17,102 @@ namespace HamAndCheeseToastie.Controllers
             _context = context;
         }
 
-
+        // GET: api/Category
         [HttpGet]
         public async Task<IActionResult> GetAllCategoriesAsync()
         {
-
-            var products = await _context.Categories.ToListAsync();
-            return Ok();
+            try
+            {
+                var categories = await _context.Categories.ToListAsync();
+                return Ok(categories);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
+            }
         }
 
-        [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        // GET: api/Product/category/{category_id}
+        [HttpGet("{category_id}")]
+        public async Task<IActionResult> GetProductsByCategory(int category_id)
         {
-            return Ok();
+            var products = await _context.Products
+                .Where(p => p.Category_id == category_id)
+                .ToListAsync();
+
+            return Ok(products);
         }
 
+
+        // POST: api/Category
         [HttpPost]
-        public IActionResult Post()
+        public async Task<IActionResult> CreateCategoryAsync([FromBody] Category category)
         {
-            return StatusCode(StatusCodes.Status201Created);
+            if (category == null || string.IsNullOrEmpty(category.Name))
+            {
+                return BadRequest(new { message = "Invalid category data" });
+            }
+
+            try
+            {
+                _context.Categories.Add(category);
+                await _context.SaveChangesAsync();
+                return StatusCode(StatusCodes.Status201Created, category);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
+            }
         }
 
+        // PUT: api/Category/{id}
         [HttpPut("{id}")]
-        public IActionResult Put(int id)
+        public async Task<IActionResult> UpdateCategoryAsync(int id, [FromBody] Category category)
         {
-            return Ok();
+            if (id != category.Id || category == null || string.IsNullOrEmpty(category.Name))
+            {
+                return BadRequest(new { message = "Invalid category data" });
+            }
+
+            try
+            {
+                var existingCategory = await _context.Categories.FindAsync(id);
+                if (existingCategory == null)
+                {
+                    return NotFound(new { message = "Category not found" });
+                }
+
+                existingCategory.Name = category.Name;
+                _context.Categories.Update(existingCategory);
+                await _context.SaveChangesAsync();
+                return Ok(existingCategory);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
+            }
         }
 
+        // DELETE: api/Category/{id}
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> DeleteCategoryAsync(int id)
         {
-            return Ok();
+            try
+            {
+                var category = await _context.Categories.FindAsync(id);
+                if (category == null)
+                {
+                    return NotFound(new { message = "Category not found" });
+                }
+
+                _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Category deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
+            }
         }
     }
 }
