@@ -25,14 +25,14 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TransactionItem>>> GetTransactionItem()
         {
-            return await _context.TransactionItem.ToListAsync();
+            return await _context.TransactionItems.ToListAsync();
         }
 
         // GET: api/TransactionItem/5
         [HttpGet("{id}")]
         public async Task<ActionResult<TransactionItem>> GetTransactionItem(int id)
         {
-            var transactionItem = await _context.TransactionItem.FindAsync(id);
+            var transactionItem = await _context.TransactionItems.FindAsync(id);
 
             if (transactionItem == null)
             {
@@ -78,7 +78,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpPost]
         public async Task<ActionResult<TransactionItem>> PostTransactionItem(TransactionItem transactionItem)
         {
-            _context.TransactionItem.Add(transactionItem);
+            _context.TransactionItems.Add(transactionItem);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetTransactionItem", new { id = transactionItem.TransactionItemId }, transactionItem);
@@ -88,13 +88,13 @@ namespace HamAndCheeseToastie.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTransactionItem(int id)
         {
-            var transactionItem = await _context.TransactionItem.FindAsync(id);
+            var transactionItem = await _context.TransactionItems.FindAsync(id);
             if (transactionItem == null)
             {
                 return NotFound();
             }
 
-            _context.TransactionItem.Remove(transactionItem);
+            _context.TransactionItems.Remove(transactionItem);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -102,7 +102,7 @@ namespace HamAndCheeseToastie.Controllers
 
         private bool TransactionItemExists(int id)
         {
-            return _context.TransactionItem.Any(e => e.TransactionItemId == id);
+            return _context.TransactionItems.Any(e => e.TransactionItemId == id);
         }
     }
 }
