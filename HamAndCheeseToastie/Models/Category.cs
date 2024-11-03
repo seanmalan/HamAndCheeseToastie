@@ -12,5 +12,7 @@ namespace HamAndCheeseToastie.Models
 
         [Column("name")] // Specify column name in lowercase
         public string Name { get; set; }
+
+        public ICollection<Product> Products { get; set; }
     }
 }

@@ -57,6 +57,25 @@ namespace HamAndCheeseToastie.Controllers
             return Ok(products);
         }
 
+        [HttpGet("available_products_levels")]
+        public async Task<IActionResult> AvaliableStockLevels()
+        {
+            var lowStockProducts = await _context.Products
+        .Where(p => p.CurrentStockLevel == 0 || p.CurrentStockLevel < p.MinimumStockLevel + 10)
+        .Select(p => new
+        {
+            ProductName = p.Name,
+            productId = p.ID,
+            CurrentStockLevel = p.CurrentStockLevel,
+            MinimumStockLevel = p.MinimumStockLevel
+        })
+        .ToListAsync();
+
+
+            return Ok(lowStockProducts);
+
+        }
+
 
 
         [HttpGet("total_customers")] // Change route to avoid conflicts
