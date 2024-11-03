@@ -1,0 +1,30 @@
+﻿
+services:
+  api:
+    build:
+      context: .
+      dockerfile: HamAndCheeseToastie/Dockerfile  # Adjust this path if necessary
+    ports:
+      - "8080:8080"   # Maps host port 8080 to container port 8080
+      - "8081:8081"   # Maps host port 8081 to container port 8081
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=HamAndCheeseDB;Username=postgres;Password=YourStrongPassword
+    depends_on:
+      - db  # Ensure the db service starts before the API
+
+  db:
+    image: postgres:16.2  # Use the latest stable PostgreSQL image
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 20099788
+      POSTGRES_DB: HamAndCheeseDB
+      LC_COLLATE: en_US.UTF-8  # specify your locale here
+      LC_CTYPE: en_US.UTF-8
+    ports:
+      - "5432:5432"  # Maps host port 5432 to container port 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persist data in a Docker volume
+
+volumes:
+  postgres_data:

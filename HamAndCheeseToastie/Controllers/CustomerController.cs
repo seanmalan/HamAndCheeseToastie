@@ -25,7 +25,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCustomer()
         {
-            var products = await _context.Customer.ToListAsync();
+            var products = await _context.Customers.ToListAsync();
 
             return Ok(products);
         }
@@ -34,7 +34,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Customer>> GetCustomer(int id)
         {
-            var customer = await _context.Customer.FindAsync(id);
+            var customer = await _context.Customers.FindAsync(id);
 
             if (customer == null)
             {
@@ -43,6 +43,34 @@ namespace HamAndCheeseToastie.Controllers
 
             return customer;
         }
+
+
+
+        // GET: api/Customer/5/transactions
+        [HttpGet("{id}/transactions")]
+        public async Task<ActionResult> GetCustomerTransactions(int id)
+        {
+            var transactions = await _context.Transactions
+                                             .Include(t => t.Customer) // Load the customer data along with transactions
+                                             .Where(t => t.CustomerId == id) // Filter by CustomerId
+                                             .ToListAsync();
+
+            if (transactions == null || !transactions.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(new
+            {
+                Customer = transactions.First().Customer, // Get customer details from the first transaction
+                Transactions = transactions               // List of transactions for this customer
+            });
+        }
+
+
+
+
+
 
         // PUT: api/Customer/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -80,7 +108,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpPost]
         public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
         {
-            _context.Customer.Add(customer);
+            _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetCustomer", new { id = customer.CustomerId }, customer);
@@ -90,13 +118,13 @@ namespace HamAndCheeseToastie.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            var customer = await _context.Customer.FindAsync(id);
+            var customer = await _context.Customers.FindAsync(id);
             if (customer == null)
             {
                 return NotFound();
             }
 
-            _context.Customer.Remove(customer);
+            _context.Customers.Remove(customer);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -104,7 +132,7 @@ namespace HamAndCheeseToastie.Controllers
 
         private bool CustomerExists(int id)
         {
-            return _context.Customer.Any(e => e.CustomerId == id);
+            return _context.Customers.Any(e => e.CustomerId == id);
         }
     }
 }

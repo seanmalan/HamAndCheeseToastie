@@ -25,14 +25,14 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Cashier>>> GetCashier()
         {
-            return await _context.Cashier.ToListAsync();
+            return await _context.Cashiers.ToListAsync();
         }
 
         // GET: api/Cashier/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Cashier>> GetCashier(int id)
         {
-            var cashier = await _context.Cashier.FindAsync(id);
+            var cashier = await _context.Cashiers.FindAsync(id);
 
             if (cashier == null)
             {
@@ -78,7 +78,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpPost]
         public async Task<ActionResult<Cashier>> PostCashier(Cashier cashier)
         {
-            _context.Cashier.Add(cashier);
+            _context.Cashiers.Add(cashier);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetCashier", new { id = cashier.CashierId }, cashier);
@@ -88,13 +88,13 @@ namespace HamAndCheeseToastie.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCashier(int id)
         {
-            var cashier = await _context.Cashier.FindAsync(id);
+            var cashier = await _context.Cashiers.FindAsync(id);
             if (cashier == null)
             {
                 return NotFound();
             }
 
-            _context.Cashier.Remove(cashier);
+            _context.Cashiers.Remove(cashier);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -102,7 +102,7 @@ namespace HamAndCheeseToastie.Controllers
 
         private bool CashierExists(int id)
         {
-            return _context.Cashier.Any(e => e.CashierId == id);
+            return _context.Cashiers.Any(e => e.CashierId == id);
         }
     }
 }
