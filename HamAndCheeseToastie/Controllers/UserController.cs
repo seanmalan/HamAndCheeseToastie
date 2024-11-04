@@ -22,7 +22,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _context.Users.ToListAsync();
+            var users = await _context.users.ToListAsync();
             return Ok(users); // Return 200 OK with the list of users
         }
 
@@ -30,7 +30,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.users.FirstOrDefaultAsync(u => u.id == id);
 
             if (user == null)
             {
@@ -49,11 +49,11 @@ namespace HamAndCheeseToastie.Controllers
                 return BadRequest(new { message = "User data is required" }); // Return 400 Bad Request if user is null
             }
 
-            _context.Users.Add(user);
+            _context.users.Add(user);
             await _context.SaveChangesAsync();
 
             // Return 201 Created with the location of the new user and the user data
-            return CreatedAtAction(nameof(Get), new { id = user.Id }, user);
+            return CreatedAtAction(nameof(Get), new { id = user.id }, user);
         }
 
         // PUT: api/User/5
@@ -65,7 +65,7 @@ namespace HamAndCheeseToastie.Controllers
                 return BadRequest(new { message = "User data is required" }); // Return 400 Bad Request if user is null
             }
 
-            var userToUpdate = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var userToUpdate = await _context.users.FirstOrDefaultAsync(u => u.id == id);
 
             if (userToUpdate == null)
             {
@@ -73,11 +73,10 @@ namespace HamAndCheeseToastie.Controllers
             }
 
             // Update user fields
-            userToUpdate.Username = user.Username;
-            userToUpdate.Email = user.Email;
-            userToUpdate.Password = user.Password;
-            userToUpdate.Role = user.Role;
-            userToUpdate.UpdatedAt = DateTime.Now;
+            userToUpdate.username = user.username;
+            userToUpdate.email = user.email;
+            userToUpdate.role = user.role;
+            userToUpdate.updated_at = DateTime.Now;
 
             await _context.SaveChangesAsync();
 
@@ -88,14 +87,14 @@ namespace HamAndCheeseToastie.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.users.FirstOrDefaultAsync(u => u.id == id);
 
             if (user == null)
             {
                 return NotFound(new { message = "User not found" }); // Return 404 if user is not found
             }
 
-            _context.Users.Remove(user);
+            _context.users.Remove(user);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "User deleted successfully" }); // Return 200 OK with confirmation message

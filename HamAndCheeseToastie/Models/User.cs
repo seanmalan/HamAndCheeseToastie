@@ -7,20 +7,17 @@ namespace HamAndCheeseToastie.Models
     {
 
         [Key]
-        public int Id { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string Email { get; set; }
+        public int id { get; set; }
+        public string username { get; set; }
+        //public string password { get; set; }
+        public string email { get; set; }
+        public string password_hash { get; set; } = string.Empty;
 
-        public string EmailConfirmed { get; set; } = string.Empty;
+        public DateTime created_at { get; set; } = DateTime.UtcNow; // Set to UTC now
 
-        public string PasswordHash { get; set; } = string.Empty;
+        public DateTime updated_at { get; set; } = DateTime.UtcNow;
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        
-        public DateTime UpdatedAt { get; set; }
-
-        public int Role { get; set; }
+        public int role { get; set; }
 
     }
 }
