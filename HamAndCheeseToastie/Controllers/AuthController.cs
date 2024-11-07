@@ -62,8 +62,8 @@ namespace HamAndCheeseToastie.Controllers
 
             // Hash the password and create the user
             var hashedPassword = PasswordHasher.HashPassword(request.Password);
-            var user = new User { username = request.Username, password_hash = hashedPassword, email = request.Email, role = '3' };
-            _context.users.Add(user);
+            var user = new User { username = request.Username, password_hash = hashedPassword, email = request.Email, roleId = '3' };
+            await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
 
             return Ok("User registered successfully.");
@@ -72,7 +72,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = await _context.users.SingleOrDefaultAsync(u => u.email == request.Email);
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.email == request.Email);
             if (user == null || !PasswordHasher.VerifyPassword(request.Password, user.password_hash))
             {
                 return Unauthorized("Invalid username or password.");

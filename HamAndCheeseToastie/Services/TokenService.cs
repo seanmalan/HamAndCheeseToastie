@@ -9,20 +9,21 @@ namespace HamAndCheeseToastie.Services
 {
     public class TokenService
     {
-        private const string SecretKey = "YourSecretKeyForTokenSigning"; // Should be stored securely
+        private const string SecretKey = "YourSuperSecure256BitSecretKeyForTokenSigning123456"; // 32 bytes, 256 bits
+                                                                                                // Should be stored securely
 
         public static string GenerateToken(string userId, int expiryMinutes = 30)
         {
-            var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey));
+            var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey)); // Make sure SecretKey is 32 bytes
             var credentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                new Claim(JwtRegisteredClaimNames.Sub, userId),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            }),
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        }),
                 Expires = DateTime.UtcNow.AddMinutes(expiryMinutes),
                 SigningCredentials = credentials
             };

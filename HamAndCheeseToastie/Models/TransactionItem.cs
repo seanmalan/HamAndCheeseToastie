@@ -7,7 +7,6 @@ namespace HamAndCheeseToastie.Models
     {
         [Key]
         public int Id { get; set; }
-        public int TransactionItemId { get; set; }              // Unique ID for the transaction item
         public int TransactionId { get; set; }                  // Reference to the transaction
         public Transaction Transaction { get; set; }            // Relationship to the main transaction
         public int ProductId { get; set; }                      // Reference to the product

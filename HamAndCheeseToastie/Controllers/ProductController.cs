@@ -8,6 +8,8 @@ using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using HamAndCheeseToastie.DTOs;
+using System.Globalization;
+using CsvHelper;
 
 
 namespace HamAndCheeseToastie.Controllers
@@ -185,19 +187,55 @@ namespace HamAndCheeseToastie.Controllers
                 return BadRequest("No file uploaded");
             }
 
+            var productsToInsert = new List<Product>();
+
             using (var reader = new StreamReader(file.OpenReadStream()))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                var products = _csvReader.ImportCsv(reader);
+                // Assuming your CSV file headers match your Product properties
+                csv.Context.RegisterClassMap<ProductMap>(); // Map Product columns
+                var records = csv.GetRecords<ProductDto>().ToList();
 
-                if (products == null || !products.Any())
+                // Fetch all existing category IDs to validate against
+                var existingCategoryIds = await _context.Categories
+                    .Select(c => c.Id)
+                    .ToListAsync();
+
+                foreach (var record in records)
                 {
-                    return BadRequest("Invalid or empty CSV file");
-                }
+                    if (!existingCategoryIds.Contains(record.Category_id))
+                    {
+                        Console.WriteLine($"Invalid Category_id {record.Category_id} for product {record.Name}");
+                        continue;
+                    }
 
-                // Bulk insert into the database
-                _context.Products.AddRange(products);
-                await _context.SaveChangesAsync();
+                    // Check if a product with the same unique identifiers already exists
+                    var existingProduct = await _context.Products
+                        .FirstOrDefaultAsync(p => p.Name == record.Name && p.Category_id == record.Category_id);
+
+                    if (existingProduct == null)
+                    {
+                        var product = new Product
+                        {
+                            Name = record.Name,
+                            BrandName = record.BrandName,
+                            Weight = record.Weight,
+                            Category_id = record.Category_id,
+                            CurrentStockLevel = record.CurrentStockLevel,
+                            MinimumStockLevel = record.MinimumStockLevel,
+                            Price = record.Price,
+                            WholesalePrice = record.WholesalePrice,
+                            EAN13Barcode = record.EAN13Barcode,
+                            ImagePath = record.ImagePath
+                        };
+                        productsToInsert.Add(product);
+                    }
+                }
             }
+
+            // Bulk insert into the database
+            _context.Products.AddRange(productsToInsert);
+            await _context.SaveChangesAsync();
 
             return Ok(new { Message = "Products imported successfully" });
         }

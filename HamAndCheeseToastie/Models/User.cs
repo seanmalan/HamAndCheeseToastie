@@ -17,7 +17,7 @@ namespace HamAndCheeseToastie.Models
 
         public DateTime updated_at { get; set; } = DateTime.UtcNow;
 
-        public int role { get; set; }
+        public int roleId { get; set; }
 
     }
 }

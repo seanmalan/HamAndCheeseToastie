@@ -11,6 +11,8 @@ namespace HamAndCheeseToastie.Models
         public string FirstName { get; set; }            // Cashier's first name
         public string LastName { get; set; }             // Cashier's last name
         public string EmployeeCode { get; set; }         // Cashier's employee code or ID
+        public int RoleId { get; set; }               // Unique ID for the cashier
+
     }
 
 }
