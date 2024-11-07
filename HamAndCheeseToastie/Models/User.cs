@@ -7,30 +7,14 @@ namespace HamAndCheeseToastie.Models
     public class User
     {
         [Key]
-        [Column("id")]
-        public int Id { get; set; }
-
-        [Column("username")]
-        public string Username { get; set; } = string.Empty;
-
-        [Column("password")]
-        public string Password { get; set; } = string.Empty;
-
-        [Column("email")]
-        public string Email { get; set; } = string.Empty;
-
-        [Column("email_confirmed")]
-        public string EmailConfirmed { get; set; } = string.Empty;
-
-        [Column("password_hash")]
-        public string PasswordHash { get; set; } = string.Empty;
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-
+        public int id { get; set; }
+        public string username { get; set; }
+        //public string password { get; set; }
+        public string email { get; set; }
+        public string password_hash { get; set; } = string.Empty;
+        public DateTime created_at { get; set; } = DateTime.UtcNow; // Set to UTC now
+        public DateTime updated_at { get; set; } = DateTime.UtcNow;
+        public int roleId { get; set; }
         [Column("role")]
         public int Role { get; set; }
     }

@@ -1,5 +1,9 @@
 using HamAndCheeseToastie.Models;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
+using NpgsqlTypes;
+
 
 namespace HamAndCheeseToastie.Database
 {
@@ -19,7 +23,28 @@ namespace HamAndCheeseToastie.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<User>(entity =>
+            {
+                // Explicitly map to "Users" table with double quotes for PostgreSQL
+                entity.ToTable("Users");
+
+                // Map property names to exact column names
+                entity.Property(e => e.id).HasColumnName("Id");
+                entity.Property(e => e.username).HasColumnName("Username");
+                entity.Property(e => e.email).HasColumnName("Email");
+                entity.Property(e => e.password_hash).HasColumnName("PasswordHash");
+                entity.Property(e => e.created_at).HasColumnName("CreatedAt");
+                entity.Property(e => e.updated_at).HasColumnName("UpdatedAt");
+                entity.Property(e => e.roleId).HasColumnName("Role");
+            });
+
+            modelBuilder.Entity<Transaction>()
+        .Property(t => t.PaymentMethod)
+        .HasConversion<string>();
+
+            // Additional configurations if needed
             base.OnModelCreating(modelBuilder);
+        }
 
             // Set table names explicitly in lowercase to match PostgreSQL conventions
             modelBuilder.Entity<Product>().ToTable("products");

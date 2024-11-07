@@ -9,7 +9,8 @@ namespace HamAndCheeseToastie.Models
         [Key]
         [Column("id")] // Set column name to lowercase
         public int Id { get; set; }
-
+        public string Name { get; set; }
+        public int UserId { get; set; }
         [Column("name")] // Set column name to lowercase
         public string Name { get; set; } = string.Empty;
     }

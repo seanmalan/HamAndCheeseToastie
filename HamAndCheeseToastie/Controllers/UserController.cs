@@ -30,7 +30,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.id == id);
 
             if (user == null)
             {
@@ -53,7 +53,7 @@ namespace HamAndCheeseToastie.Controllers
             await _context.SaveChangesAsync();
 
             // Return 201 Created with the location of the new user and the user data
-            return CreatedAtAction(nameof(Get), new { id = user.Id }, user);
+            return CreatedAtAction(nameof(Get), new { id = user.id }, user);
         }
 
         // PUT: api/User/5
@@ -65,7 +65,7 @@ namespace HamAndCheeseToastie.Controllers
                 return BadRequest(new { message = "User data is required" }); // Return 400 Bad Request if user is null
             }
 
-            var userToUpdate = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var userToUpdate = await _context.Users.FirstOrDefaultAsync(u => u.id == id);
 
             if (userToUpdate == null)
             {
@@ -73,11 +73,10 @@ namespace HamAndCheeseToastie.Controllers
             }
 
             // Update user fields
-            userToUpdate.Username = user.Username;
-            userToUpdate.Email = user.Email;
-            userToUpdate.Password = user.Password;
-            userToUpdate.Role = user.Role;
-            userToUpdate.UpdatedAt = DateTime.Now;
+            userToUpdate.username = user.username;
+            userToUpdate.email = user.email;
+            userToUpdate.roleId = user.roleId;
+            userToUpdate.updated_at = DateTime.Now;
 
             await _context.SaveChangesAsync();
 
@@ -88,7 +87,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.id == id);
 
             if (user == null)
             {

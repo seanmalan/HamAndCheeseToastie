@@ -47,7 +47,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTransactionItem(int id, TransactionItem transactionItem)
         {
-            if (id != transactionItem.TransactionItemId)
+            if (id != transactionItem.Id)
             {
                 return BadRequest();
             }
@@ -81,7 +81,7 @@ namespace HamAndCheeseToastie.Controllers
             _context.TransactionItems.Add(transactionItem);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetTransactionItem", new { id = transactionItem.TransactionItemId }, transactionItem);
+            return CreatedAtAction("GetTransactionItem", new { id = transactionItem.Id }, transactionItem);
         }
 
         // DELETE: api/TransactionItem/5
@@ -102,7 +102,7 @@ namespace HamAndCheeseToastie.Controllers
 
         private bool TransactionItemExists(int id)
         {
-            return _context.TransactionItems.Any(e => e.TransactionItemId == id);
+            return _context.TransactionItem.Any(e => e.Id == id);
         }
     }
 }
