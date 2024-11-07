@@ -24,7 +24,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTransactions()
         {
-            var transactions = await _context.Transaction.ToListAsync();
+            var transactions = await _context.Transactions.ToListAsync();
             return Ok(transactions);
         }
 
@@ -32,7 +32,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Transaction>> GetTransaction(int id)
         {
-            var transaction = await _context.Transaction.FindAsync(id);
+            var transaction = await _context.Transactions.FindAsync(id);
 
             if (transaction == null)
             {
@@ -85,7 +85,7 @@ namespace HamAndCheeseToastie.Controllers
                 return BadRequest(ModelState);
             }
 
-            _context.Transaction.Add(transaction);
+            _context.Transactions.Add(transaction);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetTransaction), new { id = transaction.TransactionId }, transaction);
@@ -95,13 +95,13 @@ namespace HamAndCheeseToastie.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTransaction(int id)
         {
-            var transaction = await _context.Transaction.FindAsync(id);
+            var transaction = await _context.Transactions.FindAsync(id);
             if (transaction == null)
             {
                 return NotFound(new { Message = $"Transaction with ID {id} not found." });
             }
 
-            _context.Transaction.Remove(transaction);
+            _context.Transactions.Remove(transaction);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -109,7 +109,7 @@ namespace HamAndCheeseToastie.Controllers
 
         private bool TransactionExists(int id)
         {
-            return _context.Transaction.Any(e => e.TransactionId == id);
+            return _context.Transactions.Any(e => e.TransactionId == id);
         }
     }
 }

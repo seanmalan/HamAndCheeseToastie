@@ -3,6 +3,7 @@ using System;
 using HamAndCheeseToastie.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HamAndCheeseToastie.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241031205854_AddProductSerial")]
+    partial class AddProductSerial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -280,36 +283,51 @@ namespace HamAndCheeseToastie.Migrations
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.User", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("created_at")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
-                    b.Property<string>("email")
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<string>("EmailConfirmed")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("email_confirmed");
 
-                    b.Property<string>("password_hash")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("password");
-                    b.Property<int>("role")
-                        .HasColumnType("integer");
 
-                    b.Property<DateTime>("updated_at")
-                        .HasColumnType("timestamp with time zone");
-                    b.Property<string>("username")
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("password_hash");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer")
+                        .HasColumnName("role");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("username");
 
-                    b.HasKey("id");
+                    b.HasKey("Id");
 
                     b.ToTable("users", (string)null);
                 });
