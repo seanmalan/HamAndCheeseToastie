@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HamAndCheeseToastie.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20241106175225_ChangeToCashier")]
-    partial class ChangeToCashier
+    [Migration("20241108061551_ChangeToProduct")]
+    partial class ChangeToProduct
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -29,28 +29,36 @@ namespace HamAndCheeseToastie.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CashierId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("cashier_id");
 
                     b.Property<string>("EmployeeCode")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("employee_code");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("first_name");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("last_name");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cashier");
+                    b.ToTable("Cashier", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Category", b =>
@@ -67,7 +75,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Customer", b =>
@@ -79,7 +87,6 @@ namespace HamAndCheeseToastie.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerId"));
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FirstName")
@@ -94,139 +101,14 @@ namespace HamAndCheeseToastie.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("CustomerId");
 
-                    b.ToTable("Customer");
+                    b.ToTable("Customer", (string)null);
                 });
 
-            modelBuilder.Entity("HamAndCheeseToastie.Models.Role", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Roles");
-                });
-
-            modelBuilder.Entity("HamAndCheeseToastie.Models.Transaction", b =>
-                {
-                    b.Property<int>("TransactionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TransactionId"));
-
-                    b.Property<int>("CashierId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Discount")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("PaymentMethod")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("TaxAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("TotalAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTime>("TransactionDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("TransactionId");
-
-                    b.HasIndex("CashierId");
-
-                    b.HasIndex("CustomerId");
-
-                    b.ToTable("Transaction");
-                });
-
-            modelBuilder.Entity("HamAndCheeseToastie.Models.TransactionItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("TransactionId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TransactionItemId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("TransactionId");
-
-                    b.ToTable("TransactionItem");
-                });
-
-            modelBuilder.Entity("HamAndCheeseToastie.Models.User", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
-
-                    b.Property<DateTime>("created_at")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("password_hash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("role")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("updated_at")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("username")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("id");
-
-                    b.ToTable("users", (string)null);
-                });
-
-            modelBuilder.Entity("Product", b =>
+            modelBuilder.Entity("HamAndCheeseToastie.Models.Product", b =>
                 {
                     b.Property<int>("ID")
                         .ValueGeneratedOnAdd()
@@ -238,8 +120,12 @@ namespace HamAndCheeseToastie.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Category_id")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("integer");
+
+                    b.Property<int>("Category_id")
+                        .HasColumnType("integer")
+                        .HasColumnName("Category_id");
 
                     b.Property<int>("CurrentStockLevel")
                         .HasColumnType("integer");
@@ -271,9 +157,158 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasKey("ID");
 
-                    b.HasIndex("Category_id");
+                    b.HasIndex("CategoryId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
+                });
+
+            modelBuilder.Entity("HamAndCheeseToastie.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles", (string)null);
+                });
+
+            modelBuilder.Entity("HamAndCheeseToastie.Models.Transaction", b =>
+                {
+                    b.Property<int>("TransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TransactionId"));
+
+                    b.Property<int>("CashierId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("TransactionId");
+
+                    b.HasIndex("CashierId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("Transaction", (string)null);
+                });
+
+            modelBuilder.Entity("HamAndCheeseToastie.Models.TransactionItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("TransactionId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("TransactionId");
+
+                    b.ToTable("TransactionItem", (string)null);
+                });
+
+            modelBuilder.Entity("HamAndCheeseToastie.Models.User", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("Id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer")
+                        .HasColumnName("role");
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
+
+                    b.Property<string>("email")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("Email");
+
+                    b.Property<string>("password_hash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("PasswordHash");
+
+                    b.Property<int>("roleId")
+                        .HasColumnType("integer")
+                        .HasColumnName("Role");
+
+                    b.Property<DateTime>("updated_at")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAt");
+
+                    b.Property<string>("username")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("Username");
+
+                    b.HasKey("id");
+
+                    b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("HamAndCheeseToastie.Models.Product", b =>
+                {
+                    b.HasOne("HamAndCheeseToastie.Models.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Transaction", b =>
@@ -297,7 +332,7 @@ namespace HamAndCheeseToastie.Migrations
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.TransactionItem", b =>
                 {
-                    b.HasOne("Product", "Product")
+                    b.HasOne("HamAndCheeseToastie.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -314,15 +349,9 @@ namespace HamAndCheeseToastie.Migrations
                     b.Navigation("Transaction");
                 });
 
-            modelBuilder.Entity("Product", b =>
+            modelBuilder.Entity("HamAndCheeseToastie.Models.Category", b =>
                 {
-                    b.HasOne("HamAndCheeseToastie.Models.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("Category_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Transaction", b =>

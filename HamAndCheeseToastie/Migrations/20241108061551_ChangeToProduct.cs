@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HamAndCheeseToastie.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreateForPostgres : Migration
+    public partial class ChangeToProduct : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,16 +16,17 @@ namespace HamAndCheeseToastie.Migrations
                 name: "Cashier",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CashierId = table.Column<int>(type: "integer", nullable: false),
-                    FirstName = table.Column<string>(type: "text", nullable: false),
-                    LastName = table.Column<string>(type: "text", nullable: false),
-                    EmployeeCode = table.Column<string>(type: "text", nullable: false)
+                    cashier_id = table.Column<int>(type: "integer", nullable: false),
+                    first_name = table.Column<string>(type: "text", nullable: false),
+                    last_name = table.Column<string>(type: "text", nullable: false),
+                    employee_code = table.Column<string>(type: "text", nullable: false),
+                    RoleId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Cashier", x => x.Id);
+                    table.PrimaryKey("PK_Cashier", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -49,8 +50,8 @@ namespace HamAndCheeseToastie.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     FirstName = table.Column<string>(type: "text", nullable: false),
                     LastName = table.Column<string>(type: "text", nullable: false),
-                    Email = table.Column<string>(type: "text", nullable: false),
-                    PhoneNumber = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "text", nullable: true),
                     IsLoyaltyMember = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
@@ -62,13 +63,14 @@ namespace HamAndCheeseToastie.Migrations
                 name: "Roles",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "text", nullable: false)
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Roles", x => x.Id);
+                    table.PrimaryKey("PK_Roles", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -78,13 +80,12 @@ namespace HamAndCheeseToastie.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Username = table.Column<string>(type: "text", nullable: false),
-                    Password = table.Column<string>(type: "text", nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
-                    EmailConfirmed = table.Column<string>(type: "text", nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Role = table.Column<int>(type: "integer", nullable: false)
+                    Role = table.Column<int>(type: "integer", nullable: false),
+                    role = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -101,6 +102,7 @@ namespace HamAndCheeseToastie.Migrations
                     BrandName = table.Column<string>(type: "text", nullable: false),
                     Weight = table.Column<string>(type: "text", nullable: false),
                     Category_id = table.Column<int>(type: "integer", nullable: false),
+                    CategoryId = table.Column<int>(type: "integer", nullable: false),
                     CurrentStockLevel = table.Column<int>(type: "integer", nullable: false),
                     MinimumStockLevel = table.Column<int>(type: "integer", nullable: false),
                     Price = table.Column<decimal>(type: "numeric", nullable: false),
@@ -112,8 +114,8 @@ namespace HamAndCheeseToastie.Migrations
                 {
                     table.PrimaryKey("PK_Products", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_Products_Categories_Category_id",
-                        column: x => x.Category_id,
+                        name: "FK_Products_Categories_CategoryId",
+                        column: x => x.CategoryId,
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -128,7 +130,7 @@ namespace HamAndCheeseToastie.Migrations
                     TransactionDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     TotalAmount = table.Column<decimal>(type: "numeric", nullable: false),
                     Discount = table.Column<decimal>(type: "numeric", nullable: false),
-                    PaymentMethod = table.Column<int>(type: "integer", nullable: false),
+                    PaymentMethod = table.Column<string>(type: "text", nullable: false),
                     TaxAmount = table.Column<decimal>(type: "numeric", nullable: false),
                     CashierId = table.Column<int>(type: "integer", nullable: false),
                     CustomerId = table.Column<int>(type: "integer", nullable: false)
@@ -140,7 +142,7 @@ namespace HamAndCheeseToastie.Migrations
                         name: "FK_Transaction_Cashier_CashierId",
                         column: x => x.CashierId,
                         principalTable: "Cashier",
-                        principalColumn: "Id",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Transaction_Customer_CustomerId",
@@ -154,9 +156,8 @@ namespace HamAndCheeseToastie.Migrations
                 name: "TransactionItem",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    TransactionItemId = table.Column<int>(type: "integer", nullable: false),
                     TransactionId = table.Column<int>(type: "integer", nullable: false),
                     ProductId = table.Column<int>(type: "integer", nullable: false),
                     Quantity = table.Column<int>(type: "integer", nullable: false),
@@ -165,7 +166,7 @@ namespace HamAndCheeseToastie.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TransactionItem", x => x.Id);
+                    table.PrimaryKey("PK_TransactionItem", x => x.id);
                     table.ForeignKey(
                         name: "FK_TransactionItem_Products_ProductId",
                         column: x => x.ProductId,
@@ -181,9 +182,9 @@ namespace HamAndCheeseToastie.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Products_Category_id",
+                name: "IX_Products_CategoryId",
                 table: "Products",
-                column: "Category_id");
+                column: "CategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transaction_CashierId",

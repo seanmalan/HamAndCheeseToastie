@@ -33,23 +33,23 @@ namespace HamAndCheeseToastie.Controllers
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await _context.Products
-                .Include(p => p.Category) // Include Category to fetch the name
-                .Select(p => new ProductDto
-                {
-                    ID = p.ID,
-                    Name = p.Name,
-                    BrandName = p.BrandName,
-                    Weight = p.Weight,
-                    Category_id = p.Category_id,
-                    CategoryName = p.Category.Name, // Get Category Name
-                    CurrentStockLevel = p.CurrentStockLevel,
-                    MinimumStockLevel = p.MinimumStockLevel,
-                    Price = p.Price,
-                    WholesalePrice = p.WholesalePrice,
-                    EAN13Barcode = p.EAN13Barcode,
-                    ImagePath = p.ImagePath
-                })
-                .ToListAsync();
+            .Include(p => p.Category) // Ensure Category is correctly included as a navigation property
+            .Select(p => new ProductDto
+            {
+                ID = p.ID,
+                Name = p.Name,
+                BrandName = p.BrandName,
+                Weight = p.Weight,
+                Category_id = p.Category_id,  // The foreign key ID
+                CategoryName = p.Category.Name, // Get the category name from the navigation property
+                CurrentStockLevel = p.CurrentStockLevel,
+                MinimumStockLevel = p.MinimumStockLevel,
+                Price = p.Price,
+                WholesalePrice = p.WholesalePrice,
+                EAN13Barcode = p.EAN13Barcode,
+                ImagePath = p.ImagePath
+            })
+            .ToListAsync();
 
             return Ok(products);
         }

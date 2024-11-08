@@ -48,7 +48,7 @@ namespace HamAndCheeseToastie.Controllers
             // Fetch data based on the selected dataset
             object data = dataset.ToLower() switch
             {
-                "transaction" => await _context.Transactions
+                "transaction" => await _context.Transaction
                     .Where(t => t.TransactionDate >= startDate)
                     .GroupBy(t => t.TransactionDate.Date)
                     .Select(g => new
@@ -62,7 +62,7 @@ namespace HamAndCheeseToastie.Controllers
                     .Select(c => new
                     {
                         CategoryName = c.Name,
-                        ProductCount = c.Products.Count() // Assuming a one-to-many relationship
+                        ProductCount = c.Name.Count() // Assuming a one-to-many relationship
                     }).ToListAsync(),
 
                 "product" => await _context.Products

@@ -16,10 +16,10 @@ namespace HamAndCheeseToastie.Database
         public DbSet<Role> Roles { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Category> Categories { get; set; }
-        public DbSet<Transaction> Transactions { get; set; } = default!;
-        public DbSet<TransactionItem> TransactionItems { get; set; } = default!;
-        public DbSet<Cashier> Cashiers { get; set; } = default!;
-        public DbSet<Customer> Customers { get; set; } = default!;
+        public DbSet<HamAndCheeseToastie.Models.Transaction> Transaction { get; set; } = default!;
+        public DbSet<HamAndCheeseToastie.Models.TransactionItem> TransactionItem { get; set; } = default!;
+        public DbSet<HamAndCheeseToastie.Models.Cashier> Cashier { get; set; } = default!;
+        public DbSet<HamAndCheeseToastie.Models.Customer> Customer { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,23 +38,29 @@ namespace HamAndCheeseToastie.Database
                 entity.Property(e => e.roleId).HasColumnName("Role");
             });
 
+            // Set table names explicitly in lowercase to match PostgreSQL conventions
+            modelBuilder.Entity<Product>().ToTable("Products");
+            modelBuilder.Entity<Role>().ToTable("Roles");
+            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.Entity<Category>().ToTable("Categories");
+            modelBuilder.Entity<Transaction>().ToTable("Transaction");
+            modelBuilder.Entity<TransactionItem>().ToTable("TransactionItem");
+            modelBuilder.Entity<Cashier>().ToTable("Cashier");
+            modelBuilder.Entity<Customer>().ToTable("Customer");
+
             modelBuilder.Entity<Transaction>()
-        .Property(t => t.PaymentMethod)
-        .HasConversion<string>();
+            .Property(t => t.PaymentMethod)
+            .HasConversion<string>();
+
+            modelBuilder.Entity<Product>()
+            .Property(p => p.Category_id)
+            .HasColumnName("Category_id"); // Ensures the correct column name in the database
+
 
             // Additional configurations if needed
             base.OnModelCreating(modelBuilder);
         }
-
-            // Set table names explicitly in lowercase to match PostgreSQL conventions
-            modelBuilder.Entity<Product>().ToTable("products");
-            modelBuilder.Entity<Role>().ToTable("roles");
-            modelBuilder.Entity<User>().ToTable("users");
-            modelBuilder.Entity<Category>().ToTable("categories");
-            modelBuilder.Entity<Transaction>().ToTable("transactions");
-            modelBuilder.Entity<TransactionItem>().ToTable("transaction_items");
-            modelBuilder.Entity<Cashier>().ToTable("cashiers");
-            modelBuilder.Entity<Customer>().ToTable("customers");
         }
     }
-}
+
+

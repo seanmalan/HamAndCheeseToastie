@@ -7,12 +7,8 @@ namespace HamAndCheeseToastie.Models
     public class Category
     {
         [Key]
-        [Column("id")] // Specify column name in lowercase
         public int Id { get; set; }
-
-        [Column("name")] // Specify column name in lowercase
         public string Name { get; set; }
-
         public ICollection<Product> Products { get; set; }
     }
 }
