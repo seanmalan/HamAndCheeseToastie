@@ -40,7 +40,7 @@ namespace HamAndCheeseToastie.Controllers
                 Name = p.Name,
                 BrandName = p.BrandName,
                 Weight = p.Weight,
-                Category_id = p.Category_id,  // The foreign key ID
+                Category_id = p.CategoryId,  // The foreign key ID
                 CategoryName = p.Category.Name, // Get the category name from the navigation property
                 CurrentStockLevel = p.CurrentStockLevel,
                 MinimumStockLevel = p.MinimumStockLevel,
@@ -66,7 +66,7 @@ namespace HamAndCheeseToastie.Controllers
                     Name = p.Name,
                     BrandName = p.BrandName,
                     Weight = p.Weight,
-                    Category_id = p.Category_id,
+                    Category_id = p.CategoryId,
                     CategoryName = p.Category.Name, // Get Category Name
                     CurrentStockLevel = p.CurrentStockLevel,
                     MinimumStockLevel = p.MinimumStockLevel,
@@ -136,7 +136,7 @@ namespace HamAndCheeseToastie.Controllers
             productToUpdate.Name = product.Name;
             productToUpdate.BrandName = product.BrandName;
             productToUpdate.Weight = product.Weight;
-            productToUpdate.Category_id = product.Category_id;
+            productToUpdate.CategoryId = product.CategoryId;
             productToUpdate.CurrentStockLevel = product.CurrentStockLevel;
             productToUpdate.MinimumStockLevel = product.MinimumStockLevel;
             productToUpdate.Price = product.Price;
@@ -211,7 +211,7 @@ namespace HamAndCheeseToastie.Controllers
 
                     // Check if a product with the same unique identifiers already exists
                     var existingProduct = await _context.Products
-                        .FirstOrDefaultAsync(p => p.Name == record.Name && p.Category_id == record.Category_id);
+                        .FirstOrDefaultAsync(p => p.Name == record.Name && p.CategoryId == record.Category_id);
 
                     if (existingProduct == null)
                     {
@@ -220,7 +220,7 @@ namespace HamAndCheeseToastie.Controllers
                             Name = record.Name,
                             BrandName = record.BrandName,
                             Weight = record.Weight,
-                            Category_id = record.Category_id,
+                            CategoryId = record.Category_id,
                             CurrentStockLevel = record.CurrentStockLevel,
                             MinimumStockLevel = record.MinimumStockLevel,
                             Price = record.Price,

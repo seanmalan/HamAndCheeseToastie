@@ -14,8 +14,6 @@ namespace HamAndCheeseToastie.Models
         public string password_hash { get; set; } = string.Empty;
         public DateTime created_at { get; set; } = DateTime.UtcNow; // Set to UTC now
         public DateTime updated_at { get; set; } = DateTime.UtcNow;
-        public int roleId { get; set; }
-        [Column("role")]
         public int Role { get; set; }
     }
 }

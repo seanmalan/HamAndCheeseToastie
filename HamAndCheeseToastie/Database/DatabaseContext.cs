@@ -35,7 +35,7 @@ namespace HamAndCheeseToastie.Database
                 entity.Property(e => e.password_hash).HasColumnName("PasswordHash");
                 entity.Property(e => e.created_at).HasColumnName("CreatedAt");
                 entity.Property(e => e.updated_at).HasColumnName("UpdatedAt");
-                entity.Property(e => e.roleId).HasColumnName("Role");
+                entity.Property(e => e.Role).HasColumnName("Role");
             });
 
             // Set table names explicitly in lowercase to match PostgreSQL conventions
@@ -53,7 +53,7 @@ namespace HamAndCheeseToastie.Database
             .HasConversion<string>();
 
             modelBuilder.Entity<Product>()
-            .Property(p => p.Category_id)
+            .Property(p => p.CategoryId)
             .HasColumnName("Category_id"); // Ensures the correct column name in the database
 
 

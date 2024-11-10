@@ -37,7 +37,7 @@ namespace HamAndCheeseToastie.Controllers
         public async Task<IActionResult> GetProductsByCategory(int category_id)
         {
             var products = await _context.Products
-                .Where(p => p.Category_id == category_id)
+                .Where(p => p.CategoryId == category_id)
                 .ToListAsync();
 
             return Ok(products);

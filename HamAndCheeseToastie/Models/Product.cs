@@ -15,7 +15,7 @@ namespace HamAndCheeseToastie.Models
         public string Weight { get; set; } = string.Empty;
 
         [Column("Category_id")]
-        public int Category_id { get; set; }
+        public int CategoryId { get; set; }
         public virtual Category Category { get; set; } // Navigation Property
         public int CurrentStockLevel { get; set; }
         public int MinimumStockLevel { get; set; }

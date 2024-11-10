@@ -75,7 +75,7 @@ namespace HamAndCheeseToastie.Controllers
             // Update user fields
             userToUpdate.username = user.username;
             userToUpdate.email = user.email;
-            userToUpdate.roleId = user.roleId;
+            userToUpdate.Role = user.Role;
             userToUpdate.updated_at = DateTime.Now;
 
             await _context.SaveChangesAsync();

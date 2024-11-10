@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HamAndCheeseToastie.Database;
 using HamAndCheeseToastie.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HamAndCheeseToastie.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
@@ -50,22 +52,35 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet("{id}/transactions")]
         public async Task<ActionResult> GetCustomerTransactions(int id)
         {
+            
             var transactions = await _context.Transaction
-                                             .Include(t => t.Customer) // Load the customer data along with transactions
-                                             .Where(t => t.CustomerId == id) // Filter by CustomerId
-                                             .ToListAsync();
+                                              .Include(t => t.Customer) 
+                                              .Where(t => t.CustomerId == id)
+                                              .ToListAsync();
 
-            if (transactions == null || !transactions.Any())
+            if (!transactions.Any())
             {
-                return NotFound();
-            }
+                var customer = await _context.Customer
+                                             .Where(c => c.CustomerId == id)
+                                             .FirstOrDefaultAsync();
+                if (customer == null)
+                {
+                    return NotFound(new { Message = "Customer not found" });
+                }
 
+                return Ok(new
+                {
+                    Customer = customer,
+                    Transactions = new List<object>()
+                });
+            }
             return Ok(new
             {
-                Customer = transactions.First().Customer, // Get customer details from the first transaction
-                Transactions = transactions               // List of transactions for this customer
+                Customer = transactions.First().Customer,
+                Transactions = transactions
             });
         }
+
 
 
 
