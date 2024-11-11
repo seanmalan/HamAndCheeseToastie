@@ -239,5 +239,67 @@ namespace HamAndCheeseToastie.Controllers
 
             return Ok(new { Message = "Products imported successfully" });
         }
+
+
+        [HttpGet("maui/products")]
+        public async Task<IActionResult> GetAllProducts(int offset = 0, int limit = 30)
+        {
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Select(p => new MauiProductDto
+                {
+                    ProductID = p.ID,
+                    ProductName = p.Name,
+                    BrandName = p.BrandName,
+                    ProductWeight = p.Weight,
+                    Category = p.Category.Name, // Get the category name from the navigation property
+                    CurrentStockLevel = p.CurrentStockLevel,
+                    MinimumStockLevel = p.MinimumStockLevel,
+                    Price = p.Price,
+                    WholesalePrice = p.WholesalePrice,
+                    EAN13Barcode = p.EAN13Barcode
+                })
+                .Skip(offset) // Skip items based on the offset
+                .Take(limit)  // Take only the limit number of items
+                .ToListAsync();
+
+            return Ok(products);
+        }
+
+
+        [HttpGet("maui/product/search")]
+        public async Task<IActionResult> SearchProducts(string query = "", string category = null)
+        {
+            // Fetch products from the database
+            var products = await _context.Products
+                .Include(p => p.Category) // Include the Category navigation property
+                .ToListAsync();
+
+            // Perform filtering on the client side
+            var filteredProducts = products
+                .Where(p =>
+                    (string.IsNullOrEmpty(query) ||
+                     p.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                     p.BrandName.Contains(query, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrEmpty(category) || p.Category.Name == category)
+                )
+                .Take(100)
+                .Select(p => new MauiProductDto
+                {
+                    ProductID = p.ID,
+                    ProductName = p.Name,
+                    BrandName = p.BrandName,
+                    ProductWeight = p.Weight,
+                    Category = p.Category.Name, // Get the category name from the navigation property
+                    CurrentStockLevel = p.CurrentStockLevel,
+                    MinimumStockLevel = p.MinimumStockLevel,
+                    Price = p.Price,
+                    WholesalePrice = p.WholesalePrice,
+                    EAN13Barcode = p.EAN13Barcode
+                })
+                .ToList();
+
+            return Ok(filteredProducts);
+        }
     }
 }

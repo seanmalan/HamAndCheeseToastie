@@ -1,4 +1,5 @@
 ﻿using HamAndCheeseToastie.Database;
+using HamAndCheeseToastie.DTOs;
 using HamAndCheeseToastie.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +25,28 @@ namespace HamAndCheeseToastie.Controllers
             try
             {
                 var categories = await _context.Categories.ToListAsync();
+                return Ok(categories);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
+            }
+        }
+
+
+        //GET from the maui app
+        // GET: api/Category
+        [HttpGet("api/maui")]
+        public async Task<IActionResult> GetAllCategoriesAsyncforMaui()
+        {
+            try
+            {
+                var categories = await _context.Categories
+                    .Select(c => new MauiCategoryDto{
+                       CategoryID = c.Id, 
+                        CategoryName = c.Name
+                    })
+                    .ToListAsync();
                 return Ok(categories);
             }
             catch (Exception ex)
@@ -114,5 +137,8 @@ namespace HamAndCheeseToastie.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
             }
         }
+
+
+        // do a  search for the products using the category name as a string not the id.
     }
 }
