@@ -8,10 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using HamAndCheeseToastie.Database;
 using HamAndCheeseToastie.Models;
 using Microsoft.AspNetCore.Authorization;
+using HamAndCheeseToastie.DTOs;
 
 namespace HamAndCheeseToastie.Controllers
 {
-    [Authorize]
+    
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
@@ -82,7 +83,26 @@ namespace HamAndCheeseToastie.Controllers
         }
 
 
+        // GET: api/Customer/maui
+        [HttpGet("api/maui/customers")]
+        public async Task<IActionResult> GetCustomerMaui()
+        {
+            var products = await _context.Customer
+                .Select(c => new MauiCustomerDto()
+                {
+                    Id = c.CustomerId,
+                    CustomerId = c.CustomerId,
+                    Barcode = c.FirstName,
+                    CustomerName = c.FirstName,
+                    Surname = c.LastName,
+                    Email = c.Email,
+                    Phone = c.PhoneNumber,
+                    IsMember = c.IsLoyaltyMember    
+                })
+                .ToListAsync();
 
+            return Ok(products);
+        }
 
 
 

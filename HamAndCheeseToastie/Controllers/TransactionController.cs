@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HamAndCheeseToastie.Database;
 using HamAndCheeseToastie.Models;
+using HamAndCheeseToastie.DTOs;
 
 namespace HamAndCheeseToastie.Controllers
 {
@@ -106,6 +107,36 @@ namespace HamAndCheeseToastie.Controllers
 
             return NoContent();
         }
+
+        //retrive transactions from a specified date and limit
+        // GET: api/Transaction
+        [HttpGet("api/maui/transactions")]
+        public async Task<IActionResult> GetTransactions(DateTime? dateFrom = null, DateTime? dateTo = null, int count = 100)
+        {
+            // Set default date range if not provided
+            dateFrom ??= DateTime.MinValue;
+            dateTo ??= DateTime.MaxValue;
+
+            // Fetch transactions within the specified date range and limit the count
+            var transactions = await _context.Transaction
+                .Where(t => t.TransactionDate >= dateFrom && t.TransactionDate <= dateTo)
+                .OrderByDescending(t => t.TransactionDate)
+                .Take(count)
+                .Select(t => new MauiTransactionDto()
+                {
+                    Id = t.TransactionId,
+                    DateTime = t.TransactionDate,
+                    TotalAmount = t.TotalAmount,
+                    Discount = t.Discount,
+                    //PaymentMethod = t.PaymentMethod,
+                    GServiceTax = t.TaxAmount,
+                    CustomerId = t.CustomerId
+                })
+                .ToListAsync();
+
+            return Ok(transactions);
+        }
+
 
         private bool TransactionExists(int id)
         {

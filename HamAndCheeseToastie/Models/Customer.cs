@@ -13,5 +13,6 @@ namespace HamAndCheeseToastie.Models
         public string? Email { get; set; }                // Customer's email (optional)
         public string? PhoneNumber { get; set; }          // Customer's phone number (optional)
         public bool IsLoyaltyMember { get; set; }         // Is the customer a loyalty program member?
+        public string? Barcode { get; set; }               // Barcode for loyalty program
     }
 }
