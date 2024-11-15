@@ -18,7 +18,12 @@ namespace HamAndCheeseToastie.Controllers
             _context = context;
         }
 
-        // GET: api/Analytics/data
+        /// <summary>
+        /// Retrieves analytics data based on the specified dataset and optional period filter.
+        /// </summary>
+        /// <param name="dataset">The name of the dataset to fetch analytics for (e.g., "transaction", "category", "product")</param>
+        /// <param name="period">The optional time period filter (e.g., "week", "fortnight", "month", "year")</param>
+        /// <returns>Returns the analytics data based on the selected dataset and period filter</returns>
         [HttpGet("data")]
         public async Task<IActionResult> GetAnalyticsData(string dataset, string period = null)
         {

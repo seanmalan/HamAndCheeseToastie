@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace HamAndCheeseToastie.Controllers
 {
@@ -47,6 +48,11 @@ namespace HamAndCheeseToastie.Controllers
             _tokenService = tokenService;
         }
 
+        /// <summary>
+        /// Registers a new user.
+        /// </summary>
+        /// <param name="request">The registration details, including username, email, password, and confirmation password.</param>
+        /// <returns>A success message if the registration is successful; otherwise, an error message.</returns>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
@@ -70,6 +76,11 @@ namespace HamAndCheeseToastie.Controllers
             return Ok(new { message = "User registered successfully." });
         }
 
+        /// <summary>
+        /// Logs in a user and returns a token.
+        /// </summary>
+        /// <param name="request">The login details, including email and password.</param>
+        /// <returns>A token if the login is successful; otherwise, an error message.</returns>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -97,6 +108,11 @@ namespace HamAndCheeseToastie.Controllers
             });
         }
 
+        /// <summary>
+        /// Validates a token to check if it is still active.
+        /// </summary>
+        /// <param name="token">The token to validate.</param>
+        /// <returns>A message indicating if the token is valid or invalid.</returns>
         [HttpPost("validate")]
         public IActionResult ValidateToken([FromBody] string token)
         {
@@ -114,6 +130,11 @@ namespace HamAndCheeseToastie.Controllers
             return Ok(new { message = "Token is valid." });
         }
 
+        /// <summary>
+        /// Logs out a user by invalidating their token.
+        /// </summary>
+        /// <param name="token">The token to invalidate.</param>
+        /// <returns>A message indicating successful logout.</returns>
         [HttpPost("logout")]
         public IActionResult Logout([FromBody] string token)
         {
