@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HamAndCheeseToastie.Database;
 using HamAndCheeseToastie.Models;
+using HamAndCheeseToastie.DTOs;
 
 namespace HamAndCheeseToastie.Controllers
 {
@@ -24,7 +25,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTransactions()
         {
-            var transactions = await _context.Transactions.ToListAsync();
+            var transactions = await _context.Transaction.ToListAsync();
             return Ok(transactions);
         }
 
@@ -32,7 +33,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Transaction>> GetTransaction(int id)
         {
-            var transaction = await _context.Transactions.FindAsync(id);
+            var transaction = await _context.Transaction.FindAsync(id);
 
             if (transaction == null)
             {
@@ -85,7 +86,7 @@ namespace HamAndCheeseToastie.Controllers
                 return BadRequest(ModelState);
             }
 
-            _context.Transactions.Add(transaction);
+            _context.Transaction.Add(transaction);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetTransaction), new { id = transaction.TransactionId }, transaction);
@@ -95,21 +96,51 @@ namespace HamAndCheeseToastie.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTransaction(int id)
         {
-            var transaction = await _context.Transactions.FindAsync(id);
+            var transaction = await _context.Transaction.FindAsync(id);
             if (transaction == null)
             {
                 return NotFound(new { Message = $"Transaction with ID {id} not found." });
             }
 
-            _context.Transactions.Remove(transaction);
+            _context.Transaction.Remove(transaction);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
+        //retrive transactions from a specified date and limit
+        // GET: api/Transaction
+        [HttpGet("api/maui/transactions")]
+        public async Task<IActionResult> GetTransactions(DateTime? dateFrom = null, DateTime? dateTo = null, int count = 100)
+        {
+            // Set default date range if not provided
+            dateFrom ??= DateTime.MinValue;
+            dateTo ??= DateTime.MaxValue;
+
+            // Fetch transactions within the specified date range and limit the count
+            var transactions = await _context.Transaction
+                .Where(t => t.TransactionDate >= dateFrom && t.TransactionDate <= dateTo)
+                .OrderByDescending(t => t.TransactionDate)
+                .Take(count)
+                .Select(t => new MauiTransactionDto()
+                {
+                    Id = t.TransactionId,
+                    DateTime = t.TransactionDate,
+                    TotalAmount = t.TotalAmount,
+                    Discount = t.Discount,
+                    //PaymentMethod = t.PaymentMethod,
+                    GServiceTax = t.TaxAmount,
+                    CustomerId = t.CustomerId
+                })
+                .ToListAsync();
+
+            return Ok(transactions);
+        }
+
+
         private bool TransactionExists(int id)
         {
-            return _context.Transactions.Any(e => e.TransactionId == id);
+            return _context.Transaction.Any(e => e.TransactionId == id);
         }
     }
 }

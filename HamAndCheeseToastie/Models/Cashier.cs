@@ -21,5 +21,7 @@ namespace HamAndCheeseToastie.Models
 
         [Column("employee_code")] // Naming convention
         public string EmployeeCode { get; set; }         // Cashier's employee code or ID
+        public int RoleId { get; set; }               // Unique ID for the cashier
+
     }
 }

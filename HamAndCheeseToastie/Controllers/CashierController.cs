@@ -1,10 +1,8 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using HamAndCheeseToastie.Database;
 using HamAndCheeseToastie.Models;
 
@@ -15,41 +13,58 @@ namespace HamAndCheeseToastie.Controllers
     public class CashierController : ControllerBase
     {
         private readonly DatabaseContext _context;
+        private readonly ILogger<CashierController> _logger;
 
-        public CashierController(DatabaseContext context)
+        public CashierController(DatabaseContext context, ILogger<CashierController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
-        // GET: api/Cashier
+        /// <summary>
+        /// Retrieves a list of all cashiers.
+        /// </summary>
+        /// <returns>List of Cashier objects</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Cashier>>> GetCashier()
         {
-            return await _context.Cashiers.ToListAsync();
+            _logger.LogInformation("Fetching all cashiers");
+            return Ok(await _context.Cashier.ToListAsync());
         }
 
-        // GET: api/Cashier/5
+        /// <summary>
+        /// Retrieves a specific cashier by unique ID.
+        /// </summary>
+        /// <param name="id">The ID of the cashier to retrieve</param>
+        /// <returns>Cashier object if found, otherwise NotFound</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Cashier>> GetCashier(int id)
         {
-            var cashier = await _context.Cashiers.FindAsync(id);
+            _logger.LogInformation("Fetching cashier with ID {CashierId}", id);
+            var cashier = await _context.Cashier.FindAsync(id);
 
             if (cashier == null)
             {
-                return NotFound();
+                _logger.LogWarning("Cashier with ID {CashierId} not found", id);
+                return NotFound(new { message = "Cashier not found" });
             }
 
-            return cashier;
+            return Ok(cashier);
         }
 
-        // PUT: api/Cashier/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// Updates an existing cashier.
+        /// </summary>
+        /// <param name="id">The ID of the cashier to update</param>
+        /// <param name="cashier">Updated cashier data</param>
+        /// <returns>No content if successful, otherwise appropriate error</returns>
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCashier(int id, Cashier cashier)
+        public async Task<IActionResult> PutCashier(int id, [FromBody] Cashier cashier)
         {
             if (id != cashier.CashierId)
             {
-                return BadRequest();
+                _logger.LogWarning("Mismatched Cashier ID in request: {RequestId} vs {CashierId}", id, cashier.CashierId);
+                return BadRequest(new { message = "Cashier ID mismatch" });
             }
 
             _context.Entry(cashier).State = EntityState.Modified;
@@ -62,47 +77,60 @@ namespace HamAndCheeseToastie.Controllers
             {
                 if (!CashierExists(id))
                 {
-                    return NotFound();
+                    _logger.LogWarning("Cashier with ID {CashierId} not found for update", id);
+                    return NotFound(new { message = "Cashier not found" });
                 }
                 else
                 {
+                    _logger.LogError("Concurrency error while updating cashier with ID {CashierId}", id);
                     throw;
                 }
             }
 
+            _logger.LogInformation("Cashier with ID {CashierId} updated successfully", id);
             return NoContent();
         }
 
-        // POST: api/Cashier
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// Creates a new cashier.
+        /// </summary>
+        /// <param name="cashier">The cashier object to create</param>
+        /// <returns>Created cashier object</returns>
         [HttpPost]
-        public async Task<ActionResult<Cashier>> PostCashier(Cashier cashier)
+        public async Task<ActionResult<Cashier>> PostCashier([FromBody] Cashier cashier)
         {
-            _context.Cashiers.Add(cashier);
+            _context.Cashier.Add(cashier);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCashier", new { id = cashier.CashierId }, cashier);
+            _logger.LogInformation("Created new cashier with ID {CashierId}", cashier.CashierId);
+            return CreatedAtAction(nameof(GetCashier), new { id = cashier.CashierId }, cashier);
         }
 
-        // DELETE: api/Cashier/5
+        /// <summary>
+        /// Deletes a specific cashier by unique ID.
+        /// </summary>
+        /// <param name="id">The ID of the cashier to delete</param>
+        /// <returns>No content if successful, otherwise appropriate error</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCashier(int id)
         {
-            var cashier = await _context.Cashiers.FindAsync(id);
+            var cashier = await _context.Cashier.FindAsync(id);
             if (cashier == null)
             {
-                return NotFound();
+                _logger.LogWarning("Cashier with ID {CashierId} not found for deletion", id);
+                return NotFound(new { message = "Cashier not found" });
             }
 
-            _context.Cashiers.Remove(cashier);
+            _context.Cashier.Remove(cashier);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Deleted cashier with ID {CashierId}", id);
             return NoContent();
         }
 
         private bool CashierExists(int id)
         {
-            return _context.Cashiers.Any(e => e.CashierId == id);
+            return _context.Cashier.Any(e => e.CashierId == id);
         }
     }
 }

@@ -3,6 +3,8 @@ using HamAndCheeseToastie.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Threading.Tasks;
 
 namespace HamAndCheeseToastie.Controllers
@@ -12,32 +14,37 @@ namespace HamAndCheeseToastie.Controllers
     public class UserController : ControllerBase
     {
         private readonly DatabaseContext _context;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(DatabaseContext context)
+        public UserController(DatabaseContext context, ILogger<UserController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: api/User
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
+            _logger.LogInformation("Fetching all users");
             var users = await _context.Users.ToListAsync();
-            return Ok(users); // Return 200 OK with the list of users
+            return Ok(users);
         }
 
         // GET: api/User/5
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            _logger.LogInformation("Fetching user with ID {UserId}", id);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.id == id);
 
             if (user == null)
             {
-                return NotFound(new { message = "User not found" }); // Return 404 if user is not found
+                _logger.LogWarning("User with ID {UserId} not found", id);
+                return NotFound(new { message = "User not found" });
             }
 
-            return Ok(user); // Return 200 OK with the found user
+            return Ok(user);
         }
 
         // POST: api/User
@@ -46,14 +53,15 @@ namespace HamAndCheeseToastie.Controllers
         {
             if (user == null)
             {
-                return BadRequest(new { message = "User data is required" }); // Return 400 Bad Request if user is null
+                _logger.LogWarning("User data is required for creation");
+                return BadRequest(new { message = "User data is required" });
             }
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // Return 201 Created with the location of the new user and the user data
-            return CreatedAtAction(nameof(Get), new { id = user.Id }, user);
+            _logger.LogInformation("Created new user with ID {UserId}", user.id);
+            return CreatedAtAction(nameof(Get), new { id = user.id }, user);
         }
 
         // PUT: api/User/5
@@ -62,43 +70,44 @@ namespace HamAndCheeseToastie.Controllers
         {
             if (user == null)
             {
-                return BadRequest(new { message = "User data is required" }); // Return 400 Bad Request if user is null
+                _logger.LogWarning("User data is required for update");
+                return BadRequest(new { message = "User data is required" });
             }
 
-            var userToUpdate = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
-
+            var userToUpdate = await _context.Users.FirstOrDefaultAsync(u => u.id == id);
             if (userToUpdate == null)
             {
-                return NotFound(new { message = "User not found" }); // Return 404 if user is not found
+                _logger.LogWarning("User with ID {UserId} not found for update", id);
+                return NotFound(new { message = "User not found" });
             }
 
-            // Update user fields
-            userToUpdate.Username = user.Username;
-            userToUpdate.Email = user.Email;
-            userToUpdate.Password = user.Password;
+            userToUpdate.username = user.username;
+            userToUpdate.email = user.email;
             userToUpdate.Role = user.Role;
-            userToUpdate.UpdatedAt = DateTime.Now;
+            userToUpdate.updated_at = DateTime.Now;
 
             await _context.SaveChangesAsync();
 
-            return Ok(userToUpdate); // Return 200 OK with the updated user
+            _logger.LogInformation("Updated user with ID {UserId}", id);
+            return Ok(userToUpdate);
         }
 
         // DELETE: api/User/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
-
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.id == id);
             if (user == null)
             {
-                return NotFound(new { message = "User not found" }); // Return 404 if user is not found
+                _logger.LogWarning("User with ID {UserId} not found for deletion", id);
+                return NotFound(new { message = "User not found" });
             }
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "User deleted successfully" }); // Return 200 OK with confirmation message
+            _logger.LogInformation("Deleted user with ID {UserId}", id);
+            return Ok(new { message = "User deleted successfully" });
         }
     }
 }

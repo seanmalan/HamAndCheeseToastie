@@ -18,7 +18,12 @@ namespace HamAndCheeseToastie.Controllers
             _context = context;
         }
 
-        // GET: api/Analytics/data
+        /// <summary>
+        /// Retrieves analytics data based on the specified dataset and optional period filter.
+        /// </summary>
+        /// <param name="dataset">The name of the dataset to fetch analytics for (e.g., "transaction", "category", "product")</param>
+        /// <param name="period">The optional time period filter (e.g., "week", "fortnight", "month", "year")</param>
+        /// <returns>Returns the analytics data based on the selected dataset and period filter</returns>
         [HttpGet("data")]
         public async Task<IActionResult> GetAnalyticsData(string dataset, string period = null)
         {
@@ -48,7 +53,7 @@ namespace HamAndCheeseToastie.Controllers
             // Fetch data based on the selected dataset
             object data = dataset.ToLower() switch
             {
-                "transaction" => await _context.Transactions
+                "transaction" => await _context.Transaction
                     .Where(t => t.TransactionDate >= startDate)
                     .GroupBy(t => t.TransactionDate.Date)
                     .Select(g => new
@@ -62,7 +67,7 @@ namespace HamAndCheeseToastie.Controllers
                     .Select(c => new
                     {
                         CategoryName = c.Name,
-                        ProductCount = c.Products.Count() // Assuming a one-to-many relationship
+                        ProductCount = c.Name.Count() // Assuming a one-to-many relationship
                     }).ToListAsync(),
 
                 "product" => await _context.Products

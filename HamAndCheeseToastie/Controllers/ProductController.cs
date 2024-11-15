@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using HamAndCheeseToastie.Services;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using HamAndCheeseToastie.DTOs;
-
+using System.Globalization;
+using CsvHelper;
 
 namespace HamAndCheeseToastie.Controllers
 {
@@ -28,18 +28,21 @@ namespace HamAndCheeseToastie.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await _context.Products
-                .Include(p => p.Category) // Include Category to fetch the name
+                .Include(p => p.Category)
                 .Select(p => new ProductDto
                 {
                     ID = p.ID,
                     Name = p.Name,
                     BrandName = p.BrandName,
                     Weight = p.Weight,
-                    Category_id = p.Category_id,
-                    CategoryName = p.Category.Name, // Get Category Name
+                    Category_id = p.CategoryId,
+                    CategoryName = p.Category.Name,
                     CurrentStockLevel = p.CurrentStockLevel,
                     MinimumStockLevel = p.MinimumStockLevel,
                     Price = p.Price,
@@ -53,7 +56,9 @@ namespace HamAndCheeseToastie.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> getSingleProduct(int id)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetSingleProduct(int id)
         {
             var product = await _context.Products
                 .Include(p => p.Category)
@@ -64,8 +69,8 @@ namespace HamAndCheeseToastie.Controllers
                     Name = p.Name,
                     BrandName = p.BrandName,
                     Weight = p.Weight,
-                    Category_id = p.Category_id,
-                    CategoryName = p.Category.Name, // Get Category Name
+                    Category_id = p.CategoryId,
+                    CategoryName = p.Category.Name,
                     CurrentStockLevel = p.CurrentStockLevel,
                     MinimumStockLevel = p.MinimumStockLevel,
                     Price = p.Price,
@@ -75,131 +80,122 @@ namespace HamAndCheeseToastie.Controllers
                 })
                 .FirstOrDefaultAsync();
 
-            if (product == null)
-            {
-                return NotFound(); // Return 404 if product is not found
-            }
-
-            return Ok(product);
+            return product == null ? NotFound() : Ok(product);
         }
 
-
-        // POST: api/Product
         [HttpPost]
-        public async Task<IActionResult> Post([FromForm] Product product, IFormFile imageFile)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CreateProduct([FromForm] Product product, IFormFile imageFile)
         {
-            if (product == null)
-            {
-                return BadRequest("Product data is required");
-            }
+            if (product == null) return BadRequest("Product data is required");
 
-            // Handle image upload
-            if (imageFile != null && imageFile.Length > 0)
-            {
-                var filePath = Path.Combine(_environment.WebRootPath, "images", imageFile.FileName);
-
-                // Save image to the specified path
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await imageFile.CopyToAsync(stream);
-                }
-
-                // Store the image path in the database
-                product.ImagePath = $"/images/{imageFile.FileName}";
-            }
+            product.ImagePath = await SaveImageFileAsync(imageFile);
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(getSingleProduct), new { id = product.ID }, product);
+            return CreatedAtAction(nameof(GetSingleProduct), new { id = product.ID }, product);
         }
 
-        // PUT: api/Product/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] Product product, IFormFile imageFile)
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product, IFormFile imageFile)
         {
-            if (product == null)
-            {
-                return BadRequest("Product is null"); // Return 400 if product is null
-            }
+            if (product == null) return BadRequest("Product data is required");
 
-            var productToUpdate = await _context.Products.FirstOrDefaultAsync(p => p.ID == id);
+            var existingProduct = await _context.Products.FirstOrDefaultAsync(p => p.ID == id);
+            if (existingProduct == null) return NotFound();
 
-            if (productToUpdate == null)
-            {
-                return NotFound(); // Return 404 if product is not found
-            }
-
-            // Update product fields
-            productToUpdate.Name = product.Name;
-            productToUpdate.BrandName = product.BrandName;
-            productToUpdate.Weight = product.Weight;
-            productToUpdate.Category_id = product.Category_id;
-            productToUpdate.CurrentStockLevel = product.CurrentStockLevel;
-            productToUpdate.MinimumStockLevel = product.MinimumStockLevel;
-            productToUpdate.Price = product.Price;
-            productToUpdate.WholesalePrice = product.WholesalePrice;
-            productToUpdate.EAN13Barcode = product.EAN13Barcode;
-
-            if (imageFile != null && imageFile.Length > 0)
-            {
-                var filePath = Path.Combine(_environment.WebRootPath, "images", imageFile.FileName);
-
-                // Save the new image
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await imageFile.CopyToAsync(stream);
-                }
-
-                // Update image path
-                productToUpdate.ImagePath = $"/images/{imageFile.FileName}";
-            }
+            existingProduct.Name = product.Name;
+            existingProduct.BrandName = product.BrandName;
+            existingProduct.Weight = product.Weight;
+            existingProduct.CategoryId = product.CategoryId;
+            existingProduct.CurrentStockLevel = product.CurrentStockLevel;
+            existingProduct.MinimumStockLevel = product.MinimumStockLevel;
+            existingProduct.Price = product.Price;
+            existingProduct.WholesalePrice = product.WholesalePrice;
+            existingProduct.EAN13Barcode = product.EAN13Barcode;
+            existingProduct.ImagePath = await SaveImageFileAsync(imageFile, existingProduct.ImagePath);
 
             await _context.SaveChangesAsync();
-
-            return NoContent(); // Return 204 No Content as the update is successful
+            return NoContent();
         }
 
-        // DELETE: api/Product/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.ID == id);
-
-            if (product == null)
-            {
-                return NotFound();
-            }
+            var product = await _context.Products.FindAsync(id);
+            if (product == null) return NotFound();
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
 
         [HttpPost("csv-upload")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UploadCSV(IFormFile file)
         {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("No file uploaded");
-            }
+            if (file == null || file.Length == 0) return BadRequest("No file uploaded");
 
-            using (var reader = new StreamReader(file.OpenReadStream()))
-            {
-                var products = _csvReader.ImportCsv(reader);
-
-                if (products == null || !products.Any())
-                {
-                    return BadRequest("Invalid or empty CSV file");
-                }
-
-                // Bulk insert into the database
-                _context.Products.AddRange(products);
-                await _context.SaveChangesAsync();
-            }
+            var productsToInsert = await ParseCsvFileAsync(file);
+            _context.Products.AddRange(productsToInsert);
+            await _context.SaveChangesAsync();
 
             return Ok(new { Message = "Products imported successfully" });
+        }
+
+        private async Task<string> SaveImageFileAsync(IFormFile imageFile, string existingFilePath = null)
+        {
+            if (imageFile == null || imageFile.Length == 0) return existingFilePath;
+
+            var filePath = Path.Combine(_environment.WebRootPath, "images", imageFile.FileName);
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            await imageFile.CopyToAsync(stream);
+
+            return $"/images/{imageFile.FileName}";
+        }
+
+        private async Task<List<Product>> ParseCsvFileAsync(IFormFile file)
+        {
+            var productsToInsert = new List<Product>();
+
+            using var reader = new StreamReader(file.OpenReadStream());
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            csv.Context.RegisterClassMap<ProductMap>();
+
+            var records = csv.GetRecords<ProductDto>().ToList();
+            var existingCategoryIds = await _context.Categories.Select(c => c.Id).ToListAsync();
+
+            foreach (var record in records)
+            {
+                if (!existingCategoryIds.Contains(record.Category_id)) continue;
+
+                if (await _context.Products.AnyAsync(p => p.Name == record.Name && p.CategoryId == record.Category_id)) continue;
+
+                var product = new Product
+                {
+                    Name = record.Name,
+                    BrandName = record.BrandName,
+                    Weight = record.Weight,
+                    CategoryId = record.Category_id,
+                    CurrentStockLevel = record.CurrentStockLevel,
+                    MinimumStockLevel = record.MinimumStockLevel,
+                    Price = record.Price,
+                    WholesalePrice = record.WholesalePrice,
+                    EAN13Barcode = record.EAN13Barcode,
+                    ImagePath = record.ImagePath
+                };
+                productsToInsert.Add(product);
+            }
+
+            return productsToInsert;
         }
     }
 }
