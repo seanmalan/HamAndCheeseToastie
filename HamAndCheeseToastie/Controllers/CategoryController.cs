@@ -18,7 +18,10 @@ namespace HamAndCheeseToastie.Controllers
             _context = context;
         }
 
-        // GET: api/Category
+        /// <summary>
+        /// Retrieves all categories from the database.
+        /// </summary>
+        /// <returns>A list of all categories</returns>
         [HttpGet]
         public async Task<IActionResult> GetAllCategoriesAsync()
         {
@@ -33,17 +36,19 @@ namespace HamAndCheeseToastie.Controllers
             }
         }
 
-
-        //GET from the maui app
-        // GET: api/Category
+        /// <summary>
+        /// Retrieves all categories for use in a MAUI app, with only CategoryID and CategoryName.
+        /// </summary>
+        /// <returns>A list of categories in a simplified format for the MAUI app</returns>
         [HttpGet("api/maui")]
         public async Task<IActionResult> GetAllCategoriesAsyncforMaui()
         {
             try
             {
                 var categories = await _context.Categories
-                    .Select(c => new MauiCategoryDto{
-                       CategoryID = c.Id, 
+                    .Select(c => new MauiCategoryDto
+                    {
+                        CategoryID = c.Id,
                         CategoryName = c.Name
                     })
                     .ToListAsync();
@@ -55,7 +60,11 @@ namespace HamAndCheeseToastie.Controllers
             }
         }
 
-        // GET: api/Product/category/{category_id}
+        /// <summary>
+        /// Retrieves products by category ID.
+        /// </summary>
+        /// <param name="category_id">The ID of the category to fetch products for</param>
+        /// <returns>A list of products that belong to the specified category</returns>
         [HttpGet("{category_id}")]
         public async Task<IActionResult> GetProductsByCategory(int category_id)
         {
@@ -66,8 +75,11 @@ namespace HamAndCheeseToastie.Controllers
             return Ok(products);
         }
 
-
-        // POST: api/Category
+        /// <summary>
+        /// Creates a new category.
+        /// </summary>
+        /// <param name="category">The category to create</param>
+        /// <returns>The created category with a 201 status code</returns>
         [HttpPost]
         public async Task<IActionResult> CreateCategoryAsync([FromBody] Category category)
         {
@@ -88,7 +100,12 @@ namespace HamAndCheeseToastie.Controllers
             }
         }
 
-        // PUT: api/Category/{id}
+        /// <summary>
+        /// Updates an existing category.
+        /// </summary>
+        /// <param name="id">The ID of the category to update</param>
+        /// <param name="category">The updated category data</param>
+        /// <returns>The updated category if successful, or a 404 if the category is not found</returns>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCategoryAsync(int id, [FromBody] Category category)
         {
@@ -116,7 +133,11 @@ namespace HamAndCheeseToastie.Controllers
             }
         }
 
-        // DELETE: api/Category/{id}
+        /// <summary>
+        /// Deletes a specific category by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the category to delete</param>
+        /// <returns>A message indicating whether the deletion was successful or not</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategoryAsync(int id)
         {
@@ -138,7 +159,27 @@ namespace HamAndCheeseToastie.Controllers
             }
         }
 
+        /// <summary>
+        /// Searches for products by category name.
+        /// </summary>
+        /// <param name="categoryName">The name of the category to search for</param>
+        /// <returns>A list of products that belong to the category with the specified name</returns>
+        [HttpGet("search/{categoryName}")]
+        public async Task<IActionResult> SearchProductsByCategoryName(string categoryName)
+        {
+            var category = await _context.Categories
+                .FirstOrDefaultAsync(c => c.Name.Equals(categoryName, StringComparison.OrdinalIgnoreCase));
 
-        // do a  search for the products using the category name as a string not the id.
+            if (category == null)
+            {
+                return NotFound(new { message = "Category not found" });
+            }
+
+            var products = await _context.Products
+                .Where(p => p.CategoryId == category.Id)
+                .ToListAsync();
+
+            return Ok(products);
+        }
     }
 }
