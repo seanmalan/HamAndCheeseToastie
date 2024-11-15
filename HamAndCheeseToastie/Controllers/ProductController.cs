@@ -101,7 +101,7 @@ namespace HamAndCheeseToastie.Controllers
                 var filePath = Path.Combine(_environment.WebRootPath, "images", imageFile.FileName);
 
                 // Save image to the specified path
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                await using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await imageFile.CopyToAsync(stream);
                 }
@@ -148,7 +148,7 @@ namespace HamAndCheeseToastie.Controllers
                 var filePath = Path.Combine(_environment.WebRootPath, "images", imageFile.FileName);
 
                 // Save the new image
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                await using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await imageFile.CopyToAsync(stream);
                 }

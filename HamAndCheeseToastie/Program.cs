@@ -17,7 +17,8 @@ builder.Services.AddCors(options =>
         policyBuilder => policyBuilder
             .WithOrigins("http://localhost:3000") // React app runs on port 3000 in development
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod()
+            .AllowCredentials());
 });
 
 // Swagger for development
