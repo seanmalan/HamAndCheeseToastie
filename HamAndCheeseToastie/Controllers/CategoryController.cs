@@ -99,6 +99,41 @@ namespace HamAndCheeseToastie.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
             }
         }
+        
+        
+        /// <summary>
+        /// Creates multiple new categories.
+        /// </summary>
+        /// <param name="categories">The list of categories to create</param>
+        /// <returns>The created categories with a 201 status code</returns>
+        [HttpPost("bulk_categories")]
+        public async Task<IActionResult> CreateBulkCategoryAsync([FromBody] List<Category> categories)
+        {
+            if (categories == null || !categories.Any())
+            {
+                return BadRequest(new { message = "Invalid category data" });
+            }
+
+            try
+            {
+                foreach (var category in categories)
+                {
+                    if (string.IsNullOrEmpty(category.Name))
+                    {
+                        return BadRequest(new { message = "Invalid category data" });
+                    }
+
+                    _context.Categories.Add(category);
+                }
+
+                await _context.SaveChangesAsync();
+                return StatusCode(StatusCodes.Status201Created, categories);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
+            }
+        }
 
         /// <summary>
         /// Updates an existing category.

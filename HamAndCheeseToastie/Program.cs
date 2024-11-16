@@ -28,6 +28,8 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<TokenCacheService>();
 builder.Services.AddScoped<ICsvReader, CsvReaderService>();
+builder.Services.AddSingleton<EmailService>();
+
 
 // Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"]; // Recommended to store keys in configuration or environment

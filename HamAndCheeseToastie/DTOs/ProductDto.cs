@@ -6,7 +6,7 @@
         public string Name { get; set; } = string.Empty;
         public string BrandName { get; set; } = string.Empty;
         public string Weight { get; set; } = string.Empty;
-        public int Category_id { get; set; }
+        public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty; // Add this field
         public int CurrentStockLevel { get; set; }
         public int MinimumStockLevel { get; set; }

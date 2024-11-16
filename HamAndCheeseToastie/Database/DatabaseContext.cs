@@ -28,14 +28,22 @@ namespace HamAndCheeseToastie.Database
                 // Explicitly map to "Users" table with double quotes for PostgreSQL
                 entity.ToTable("Users");
 
+                // Primary key configuration
+                entity.HasKey(e => e.id);
+                entity.Property(e => e.id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+                
+                entity.HasIndex(e => e.email).IsUnique();
+                
                 // Map property names to exact column names
-                entity.Property(e => e.id).HasColumnName("Id");
-                entity.Property(e => e.username).HasColumnName("Username");
-                entity.Property(e => e.email).HasColumnName("Email");
-                entity.Property(e => e.password_hash).HasColumnName("PasswordHash");
-                entity.Property(e => e.created_at).HasColumnName("CreatedAt");
-                entity.Property(e => e.updated_at).HasColumnName("UpdatedAt");
-                entity.Property(e => e.Role).HasColumnName("Role");
+                entity.Property(e => e.id).HasColumnName("id");
+                entity.Property(e => e.username).HasColumnName("username");
+                entity.Property(e => e.email).HasColumnName("email");
+                entity.Property(e => e.password_hash).HasColumnName("passwordhash");
+                entity.Property(e => e.created_at).HasColumnName("createdat");
+                entity.Property(e => e.updated_at).HasColumnName("updatedat");
+                entity.Property(e => e.Role).HasColumnName("role");
             });
 
             // Set table names explicitly in lowercase to match PostgreSQL conventions
@@ -54,7 +62,7 @@ namespace HamAndCheeseToastie.Database
 
             modelBuilder.Entity<Product>()
             .Property(p => p.CategoryId)
-            .HasColumnName("Category_id"); // Ensures the correct column name in the database
+            .HasColumnName("category_id"); // Ensures the correct column name in the database
 
 
             // Additional configurations if needed

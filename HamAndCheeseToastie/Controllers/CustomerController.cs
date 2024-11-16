@@ -12,6 +12,7 @@ using HamAndCheeseToastie.DTOs;
 
 namespace HamAndCheeseToastie.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase

@@ -41,8 +41,8 @@ namespace HamAndCheeseToastie.Controllers
                     Name = p.Name,
                     BrandName = p.BrandName,
                     Weight = p.Weight,
-                    Category_id = p.CategoryId,
-                    CategoryName = p.Category.Name,
+                    CategoryId = p.CategoryId, // Ensure this matches the property correctly
+                    CategoryName = p.Category.Name, // CategoryName mapped to the Category's Name property
                     CurrentStockLevel = p.CurrentStockLevel,
                     MinimumStockLevel = p.MinimumStockLevel,
                     Price = p.Price,
@@ -51,6 +51,7 @@ namespace HamAndCheeseToastie.Controllers
                     ImagePath = p.ImagePath
                 })
                 .ToListAsync();
+
 
             return Ok(products);
         }
@@ -69,7 +70,7 @@ namespace HamAndCheeseToastie.Controllers
                     Name = p.Name,
                     BrandName = p.BrandName,
                     Weight = p.Weight,
-                    Category_id = p.CategoryId,
+                    CategoryId = p.CategoryId,
                     CategoryName = p.Category.Name,
                     CurrentStockLevel = p.CurrentStockLevel,
                     MinimumStockLevel = p.MinimumStockLevel,
@@ -189,16 +190,16 @@ namespace HamAndCheeseToastie.Controllers
 
             foreach (var record in records)
             {
-                if (!existingCategoryIds.Contains(record.Category_id)) continue;
+                if (!existingCategoryIds.Contains(record.CategoryId)) continue;
 
-                if (await _context.Products.AnyAsync(p => p.Name == record.Name && p.CategoryId == record.Category_id)) continue;
+                if (await _context.Products.AnyAsync(p => p.Name == record.Name && p.CategoryId == record.CategoryId)) continue;
 
                 var product = new Product
                 {
                     Name = record.Name,
                     BrandName = record.BrandName,
                     Weight = record.Weight,
-                    CategoryId = record.Category_id,
+                    CategoryId = record.CategoryId,
                     CurrentStockLevel = record.CurrentStockLevel,
                     MinimumStockLevel = record.MinimumStockLevel,
                     Price = record.Price,
