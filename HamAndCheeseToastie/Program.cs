@@ -15,7 +15,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         policyBuilder => policyBuilder
-            .WithOrigins("http://localhost:3000") // React app runs on port 3000 in development
+            .WithOrigins("http://localhost:3000", "http://10.0.0.2:3000") // React app runs on port 3000 in development
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
