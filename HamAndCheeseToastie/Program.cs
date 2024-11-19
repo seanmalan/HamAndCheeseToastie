@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
+
 // Configure CORS to allow requests from your React app
 builder.Services.AddCors(options =>
 {

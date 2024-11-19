@@ -55,7 +55,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cashier", (string)null);
+                    b.ToTable("cashier", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Category", b =>
@@ -74,7 +74,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("categories", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Customer", b =>
@@ -114,7 +114,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasKey("CustomerId");
 
-                    b.ToTable("Customer", (string)null);
+                    b.ToTable("customer", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Product", b =>
@@ -129,7 +129,7 @@ namespace HamAndCheeseToastie.Migrations
                     b.Property<string>("BrandName")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("brandname");
+                        .HasColumnName("brand_name");
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer")
@@ -137,21 +137,21 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.Property<int>("CurrentStockLevel")
                         .HasColumnType("integer")
-                        .HasColumnName("currentstocklevel");
+                        .HasColumnName("current_stock_level");
 
                     b.Property<string>("EAN13Barcode")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("ean13barcode");
+                        .HasColumnName("ean13_barcode");
 
                     b.Property<string>("ImagePath")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("imagepath");
+                        .HasColumnName("image_path");
 
                     b.Property<int>("MinimumStockLevel")
                         .HasColumnType("integer")
-                        .HasColumnName("minimumstocklevel");
+                        .HasColumnName("minimum_stock_level");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -169,13 +169,13 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.Property<decimal>("WholesalePrice")
                         .HasColumnType("numeric")
-                        .HasColumnName("wholesaleprice");
+                        .HasColumnName("wholesale_price");
 
                     b.HasKey("ID");
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("products", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Role", b =>
@@ -196,7 +196,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("roles", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Transaction", b =>
@@ -243,7 +243,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.ToTable("Transaction", (string)null);
+                    b.ToTable("transaction", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.TransactionItem", b =>
@@ -281,7 +281,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasIndex("TransactionId");
 
-                    b.ToTable("TransactionItem", (string)null);
+                    b.ToTable("transaction_item", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.User", b =>
@@ -331,7 +331,7 @@ namespace HamAndCheeseToastie.Migrations
                     b.HasIndex("email")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("users", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Product", b =>

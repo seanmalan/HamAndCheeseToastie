@@ -16,7 +16,7 @@ namespace HamAndCheeseToastie.Services
             _secretKey = configuration["Jwt:Key"];
         }
 
-        public string GenerateToken(string userId, int expiryMinutes = 30)
+        public string GenerateToken(string userId, int expiryMinutes = 360)
         {
             var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
             var credentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256);

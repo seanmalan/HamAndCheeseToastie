@@ -1,45 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using HamAndCheeseToastie.Models;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
-namespace HamAndCheeseToastie.Models
+public class Transaction
 {
-    [Table("transactions")] // Set table name to lowercase for PostgreSQL compatibility
-    public class Transaction
-    {
-        [Key]
-        [Column("transactionid")] // Map to 'transaction_id' column in PostgreSQL
-        public int TransactionId { get; set; } // Unique ID for the transaction
+    [Key]
+    [Column("transactionid")]
+    public int TransactionId { get; set; }
 
-        [Column("transactiondate")] // Map to 'transaction_date' column in PostgreSQL
-        public DateTime TransactionDate { get; set; } // Date and time of the transaction
+    [Column("transactiondate")]
+    public DateTime TransactionDate { get; set; }
 
-        [Column("totalamount")] // Map to 'total_amount' column in PostgreSQL
-        public decimal TotalAmount { get; set; } // Total amount of the transaction
+    [Column("totalamount")]
+    public decimal TotalAmount { get; set; }
 
-        [Column("discount")] // Map to 'discount' column in PostgreSQL
-        public decimal Discount { get; set; } // Discount applied to the transaction
+    [Column("discount")]
+    public decimal Discount { get; set; }
 
-        [Column("paymentmethod")] // Map to 'payment_method' column in PostgreSQL
-        public PaymentMethod PaymentMethod { get; set; } // Enum or reference to payment method (Cash, Credit, etc.)
+    [Column("paymentmethod")]
+    public PaymentMethod PaymentMethod { get; set; }
 
-        [Column("taxamount")] // Map to 'tax_amount' column in PostgreSQL
-        public decimal TaxAmount { get; set; } // Total tax applied
+    [Column("taxamount")]
+    public decimal TaxAmount { get; set; }
 
-        [Column("cashierid")] // Map to 'cashier_id' column in PostgreSQL
-        public int CashierId { get; set; } // Reference to the employee handling the transaction
+    [Column("cashierid")] // This maps to the foreign key in PostgreSQL
+    public int CashierId { get; set; } // Foreign key pointing to `Cashier.Id`
 
-        [ForeignKey("CashierId")]
-        public Cashier Cashier { get; set; } // Cashier details (relationship)
+    [ForeignKey("CashierId")]
+    public Cashier Cashier { get; set; } // Navigation property
 
-        [Column("customerid")] // Map to 'customer_id' column in PostgreSQL
-        public int CustomerId { get; set; } // Reference to customer (if available)
+    [Column("customerid")]
+    public int CustomerId { get; set; }
 
-        [ForeignKey("CustomerId")]
-        public Customer Customer { get; set; } // Customer details (relationship)
+    [ForeignKey("CustomerId")]
+    public Customer Customer { get; set; }
 
-        // Related collections
-        public ICollection<TransactionItem> TransactionItems { get; set; } = new List<TransactionItem>(); // Items purchased in this transaction
-    }
+    public ICollection<TransactionItem> TransactionItems { get; set; } = new List<TransactionItem>();
 }

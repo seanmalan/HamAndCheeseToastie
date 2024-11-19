@@ -56,6 +56,7 @@ namespace HamAndCheeseToastie.Controllers
             return Ok(products);
         }
 
+
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

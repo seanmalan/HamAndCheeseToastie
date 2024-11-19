@@ -15,7 +15,7 @@ namespace HamAndCheeseToastie.Models
         [Column("name")] // Map to lowercase 'name' column in PostgreSQL
         public string Name { get; set; } = string.Empty;
 
-        [Column("brandname")] // Map to lowercase 'brand_name' column in PostgreSQL
+        [Column("brand_name")] // Map to lowercase 'brand_name' column in PostgreSQL
         public string BrandName { get; set; } = string.Empty;
 
         [Column("weight")] // Map to lowercase 'weight' column in PostgreSQL
@@ -26,22 +26,22 @@ namespace HamAndCheeseToastie.Models
 
         public virtual Category Category { get; set; }
 
-        [Column("currentstocklevel")] // Map to lowercase 'current_stock_level' column in PostgreSQL
+        [Column("current_stock_level")] // Map to lowercase 'current_stock_level' column in PostgreSQL
         public int CurrentStockLevel { get; set; }
 
-        [Column("minimumstocklevel")] // Map to lowercase 'minimum_stock_level' column in PostgreSQL
+        [Column("minimum_stock_level")] // Map to lowercase 'minimum_stock_level' column in PostgreSQL
         public int MinimumStockLevel { get; set; }
 
         [Column("price")] // Map to lowercase 'price' column in PostgreSQL
         public decimal Price { get; set; }
 
-        [Column("wholesaleprice")] // Map to lowercase 'wholesale_price' column in PostgreSQL
+        [Column("wholesale_price")] // Map to lowercase 'wholesale_price' column in PostgreSQL
         public decimal WholesalePrice { get; set; }
 
-        [Column("ean13barcode")] // Map to lowercase 'ean13_barcode' column in PostgreSQL
+        [Column("ean13_barcode")] // Map to lowercase 'ean13_barcode' column in PostgreSQL
         public string EAN13Barcode { get; set; } = string.Empty;
 
-        [Column("imagepath")] // Map to lowercase 'image_path' column in PostgreSQL
+        [Column("image_path")] // Map to lowercase 'image_path' column in PostgreSQL
         public string ImagePath { get; set; }
     }
 }

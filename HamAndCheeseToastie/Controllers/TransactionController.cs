@@ -21,13 +21,38 @@ namespace HamAndCheeseToastie.Controllers
             _context = context;
         }
 
-        // GET: api/Transaction
         [HttpGet]
-        public async Task<IActionResult> GetTransactions()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetTransactions(
+    [FromQuery] DateTime? dateFrom = null,
+    [FromQuery] DateTime? dateTo = null)
         {
-            var transactions = await _context.Transaction.ToListAsync();
+            // Default values if dates are not provided
+            var fromDate = (dateFrom ?? DateTime.Now.AddDays(-30)).ToUniversalTime();
+            var toDate = (dateTo ?? DateTime.Now).ToUniversalTime();
+
+            // Validate the date range
+            if (fromDate > toDate)
+            {
+                return BadRequest("Invalid date range: 'dateFrom' must be earlier than 'dateTo'.");
+            }
+
+            // Fetch transactions within the date range
+            var transactions = await _context.Transaction
+                .Where(t => t.TransactionDate >= fromDate && t.TransactionDate <= toDate)
+                .OrderByDescending(t => t.TransactionDate) // Sort by date, most recent first
+                .ToListAsync();
+
+            if (transactions == null || !transactions.Any())
+            {
+                return NotFound("No transactions found for the specified date range.");
+            }
+
             return Ok(transactions);
         }
+
 
         // GET: api/Transaction/5
         [HttpGet("{id}")]

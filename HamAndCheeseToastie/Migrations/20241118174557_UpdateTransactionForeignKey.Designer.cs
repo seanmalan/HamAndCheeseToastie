@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HamAndCheeseToastie.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20241115084806_UpdateTransactionItemTable")]
-    partial class UpdateTransactionItemTable
+    [Migration("20241118174557_UpdateTransactionForeignKey")]
+    partial class UpdateTransactionForeignKey
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -58,7 +58,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Cashier", (string)null);
+                    b.ToTable("cashier", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Category", b =>
@@ -77,40 +77,47 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("categories", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Customer", b =>
                 {
                     b.Property<int>("CustomerId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("customerid");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerId"));
 
                     b.Property<string>("Barcode")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("barcode");
 
                     b.Property<string>("Email")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("email");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("firstname");
 
                     b.Property<bool>("IsLoyaltyMember")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("isloyaltymember");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("lastname");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("phonenumber");
 
                     b.HasKey("CustomerId");
 
-                    b.ToTable("Customer", (string)null);
+                    b.ToTable("customer", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Product", b =>
@@ -125,7 +132,7 @@ namespace HamAndCheeseToastie.Migrations
                     b.Property<string>("BrandName")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("brandname");
+                        .HasColumnName("brand_name");
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer")
@@ -133,21 +140,21 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.Property<int>("CurrentStockLevel")
                         .HasColumnType("integer")
-                        .HasColumnName("currentstocklevel");
+                        .HasColumnName("current_stock_level");
 
                     b.Property<string>("EAN13Barcode")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("ean13barcode");
+                        .HasColumnName("ean13_barcode");
 
                     b.Property<string>("ImagePath")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("imagepath");
+                        .HasColumnName("image_path");
 
                     b.Property<int>("MinimumStockLevel")
                         .HasColumnType("integer")
-                        .HasColumnName("minimumstocklevel");
+                        .HasColumnName("minimum_stock_level");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -165,13 +172,13 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.Property<decimal>("WholesalePrice")
                         .HasColumnType("numeric")
-                        .HasColumnName("wholesaleprice");
+                        .HasColumnName("wholesale_price");
 
                     b.HasKey("ID");
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("products", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Role", b =>
@@ -192,7 +199,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("roles", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Transaction", b =>
@@ -239,7 +246,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.ToTable("Transaction", (string)null);
+                    b.ToTable("transaction", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.TransactionItem", b =>
@@ -277,7 +284,7 @@ namespace HamAndCheeseToastie.Migrations
 
                     b.HasIndex("TransactionId");
 
-                    b.ToTable("TransactionItem", (string)null);
+                    b.ToTable("transaction_item", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.User", b =>
@@ -285,40 +292,49 @@ namespace HamAndCheeseToastie.Migrations
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("Id");
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpires")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("Role")
                         .HasColumnType("integer")
-                        .HasColumnName("Role");
+                        .HasColumnName("role");
 
                     b.Property<DateTime>("created_at")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAt");
+                        .HasColumnName("createdat");
 
                     b.Property<string>("email")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("Email");
+                        .HasColumnName("email");
 
                     b.Property<string>("password_hash")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("PasswordHash");
+                        .HasColumnName("passwordhash");
 
                     b.Property<DateTime>("updated_at")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAt");
+                        .HasColumnName("updatedat");
 
                     b.Property<string>("username")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("Username");
+                        .HasColumnName("username");
 
                     b.HasKey("id");
 
-                    b.ToTable("Users", (string)null);
+                    b.HasIndex("email")
+                        .IsUnique();
+
+                    b.ToTable("users", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Product", b =>
