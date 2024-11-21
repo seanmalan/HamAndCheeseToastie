@@ -8,12 +8,26 @@ namespace HamAndCheeseToastie.Models
     {
         [Key]
         public int id { get; set; }
+
+        [Required]
         public string username { get; set; }
-        //public string password { get; set; }
+
+        [Required]
         public string email { get; set; }
+
+        [Required]
         public string password_hash { get; set; } = string.Empty;
-        public DateTime created_at { get; set; } = DateTime.UtcNow; // Set to UTC now
+
+        public DateTime created_at { get; set; } = DateTime.UtcNow;
+
         public DateTime updated_at { get; set; } = DateTime.UtcNow;
+
+        [Required]
         public int Role { get; set; }
+
+        // New fields for password reset functionality
+        public string? PasswordResetToken { get; set; } // Nullable since it's optional
+
+        public DateTime? PasswordResetTokenExpires { get; set; } // Nullable since it's optional
     }
 }

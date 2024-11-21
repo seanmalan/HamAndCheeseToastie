@@ -16,7 +16,7 @@ namespace HamAndCheeseToastie.Services
             _secretKey = configuration["Jwt:Key"];
         }
 
-        public string GenerateToken(string userId, int expiryMinutes = 30)
+        public string GenerateToken(string userId, int expiryMinutes = 360)
         {
             var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
             var credentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256);
@@ -29,7 +29,9 @@ namespace HamAndCheeseToastie.Services
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(expiryMinutes),
-                SigningCredentials = credentials
+                SigningCredentials = credentials,
+                Issuer = "https://192.168.1.2:7276", // Set your issuer
+                Audience = "http://localhost:3000" // Set your audience (this should match your React app's frontend URL)
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -46,10 +48,13 @@ namespace HamAndCheeseToastie.Services
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = false,
-                ValidateAudience = false,
+                ValidateIssuer = true,          // Make sure Issuer is validated
+                ValidIssuer = "https://192.168.1.2:7276", // Your API's issuer
+                ValidateAudience = true,        // Make sure Audience is validated
+                ValidAudience = "http://localhost:3000", // Your React app's audience
                 ClockSkew = TimeSpan.Zero
             };
+
 
             try
             {
@@ -60,6 +65,32 @@ namespace HamAndCheeseToastie.Services
             {
                 return null; // Invalid token
             }
+        }
+
+        /// <summary>
+        /// Generates a reset token for password recovery.
+        /// </summary>
+        /// <param name="expiryMinutes">The expiration time in minutes for the reset token.</param>
+        /// <returns>A reset token as a string.</returns>
+        public string GenerateResetToken(int expiryMinutes = 60)
+        {
+            var symmetricKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+            var credentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Unique ID for the reset token
+                    new Claim("Purpose", "PasswordReset") // Custom claim to indicate purpose
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(expiryMinutes),
+                SigningCredentials = credentials
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }

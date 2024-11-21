@@ -7,7 +7,10 @@ namespace HamAndCheeseToastie.Models
     public class Category
     {
         [Key]
+        [Column("id")]
         public int Id { get; set; }
+        
+        [Column("name")]
         public string Name { get; set; }
         public ICollection<Product> Products { get; set; }
     }

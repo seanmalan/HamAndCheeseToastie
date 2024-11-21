@@ -12,6 +12,7 @@ using HamAndCheeseToastie.DTOs;
 
 namespace HamAndCheeseToastie.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
@@ -102,32 +103,6 @@ namespace HamAndCheeseToastie.Controllers
                 Customer = transactions.First().Customer,
                 Transactions = transactions
             });
-        }
-
-        // GET: api/Customer/maui
-        /// <summary>
-        /// Retrieves a simplified list of customers for Maui clients.
-        /// </summary>
-        /// <response code="200">Returns the list of customers formatted for Maui clients.</response>
-        [HttpGet("maui")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetCustomerMaui()
-        {
-            var customers = await _context.Customer
-                .Select(c => new MauiCustomerDto
-                {
-                    Id = c.CustomerId,
-                    CustomerId = c.CustomerId,
-                    Barcode = c.FirstName,
-                    CustomerName = c.FirstName,
-                    Surname = c.LastName,
-                    Email = c.Email,
-                    Phone = c.PhoneNumber,
-                    IsMember = c.IsLoyaltyMember
-                })
-                .ToListAsync();
-
-            return Ok(customers);
         }
 
         // PUT: api/Customer/5

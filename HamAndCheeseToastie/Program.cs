@@ -10,14 +10,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
+
 // Configure CORS to allow requests from your React app
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         policyBuilder => policyBuilder
-            .WithOrigins("http://localhost:3000") // React app runs on port 3000 in development
+            .WithOrigins("http://localhost:3000", "http://10.0.0.2:3000") // React app runs on port 3000 in development
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod()
+            .AllowCredentials());
 });
 
 // Swagger for development
@@ -27,6 +29,8 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<TokenCacheService>();
 builder.Services.AddScoped<ICsvReader, CsvReaderService>();
+builder.Services.AddSingleton<EmailService>();
+
 
 // Configure JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"]; // Recommended to store keys in configuration or environment

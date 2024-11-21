@@ -41,8 +41,8 @@ namespace HamAndCheeseToastie.Controllers
                     Name = p.Name,
                     BrandName = p.BrandName,
                     Weight = p.Weight,
-                    Category_id = p.CategoryId,
-                    CategoryName = p.Category.Name,
+                    CategoryId = p.CategoryId, // Ensure this matches the property correctly
+                    CategoryName = p.Category.Name, // CategoryName mapped to the Category's Name property
                     CurrentStockLevel = p.CurrentStockLevel,
                     MinimumStockLevel = p.MinimumStockLevel,
                     Price = p.Price,
@@ -52,8 +52,10 @@ namespace HamAndCheeseToastie.Controllers
                 })
                 .ToListAsync();
 
+
             return Ok(products);
         }
+
 
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -69,7 +71,7 @@ namespace HamAndCheeseToastie.Controllers
                     Name = p.Name,
                     BrandName = p.BrandName,
                     Weight = p.Weight,
-                    Category_id = p.CategoryId,
+                    CategoryId = p.CategoryId,
                     CategoryName = p.Category.Name,
                     CurrentStockLevel = p.CurrentStockLevel,
                     MinimumStockLevel = p.MinimumStockLevel,
@@ -91,6 +93,20 @@ namespace HamAndCheeseToastie.Controllers
             if (product == null) return BadRequest("Product data is required");
 
             product.ImagePath = await SaveImageFileAsync(imageFile);
+            // Handle image upload
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var filePath = Path.Combine(_environment.WebRootPath, "images", imageFile.FileName);
+
+                // Save image to the specified path
+                await using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(stream);
+                }
+
+                // Store the image path in the database
+                product.ImagePath = $"/images/{imageFile.FileName}";
+            }
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
@@ -175,16 +191,16 @@ namespace HamAndCheeseToastie.Controllers
 
             foreach (var record in records)
             {
-                if (!existingCategoryIds.Contains(record.Category_id)) continue;
+                if (!existingCategoryIds.Contains(record.CategoryId)) continue;
 
-                if (await _context.Products.AnyAsync(p => p.Name == record.Name && p.CategoryId == record.Category_id)) continue;
+                if (await _context.Products.AnyAsync(p => p.Name == record.Name && p.CategoryId == record.CategoryId)) continue;
 
                 var product = new Product
                 {
                     Name = record.Name,
                     BrandName = record.BrandName,
                     Weight = record.Weight,
-                    CategoryId = record.Category_id,
+                    CategoryId = record.CategoryId,
                     CurrentStockLevel = record.CurrentStockLevel,
                     MinimumStockLevel = record.MinimumStockLevel,
                     Price = record.Price,
