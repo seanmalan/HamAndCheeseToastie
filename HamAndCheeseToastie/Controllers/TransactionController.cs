@@ -26,8 +26,8 @@ namespace HamAndCheeseToastie.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetTransactions(
-    [FromQuery] DateTime? dateFrom = null,
-    [FromQuery] DateTime? dateTo = null)
+        [FromQuery] DateTime? dateFrom = null,
+        [FromQuery] DateTime? dateTo = null)
         {
             // Default values if dates are not provided
             var fromDate = (dateFrom ?? DateTime.Now.AddDays(-30)).ToUniversalTime();
