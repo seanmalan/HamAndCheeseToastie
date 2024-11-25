@@ -19,7 +19,6 @@ namespace HamAndCheeseToastie.Database
         public DbSet<Category> Categories { get; set; }
         public DbSet<Transaction> Transaction { get; set; } = default!;
         public DbSet<HamAndCheeseToastie.Models.TransactionItem> TransactionItem { get; set; } = default!;
-        public DbSet<HamAndCheeseToastie.Models.Cashier> Cashier { get; set; } = default!;
         public DbSet<HamAndCheeseToastie.Models.Customer> Customer { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -60,7 +59,6 @@ namespace HamAndCheeseToastie.Database
             modelBuilder.Entity<Category>().ToTable("categories");
             modelBuilder.Entity<Transaction>().ToTable("transaction");
             modelBuilder.Entity<TransactionItem>().ToTable("transaction_item");
-            modelBuilder.Entity<Cashier>().ToTable("cashier");
             modelBuilder.Entity<Customer>().ToTable("customer");
 
             modelBuilder.Entity<Transaction>()
@@ -70,6 +68,10 @@ namespace HamAndCheeseToastie.Database
             modelBuilder.Entity<Product>()
                 .Property(p => p.CategoryId)
                 .HasColumnName("category_id");
+
+            modelBuilder.Entity<TransactionItem>()
+        .Property(ti => ti.ProductId)
+        .HasColumnName("productid");
 
             base.OnModelCreating(modelBuilder);
         }

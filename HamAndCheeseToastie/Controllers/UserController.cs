@@ -1,4 +1,5 @@
 ﻿using HamAndCheeseToastie.Database;
+using HamAndCheeseToastie.DTOs;
 using HamAndCheeseToastie.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -47,6 +48,55 @@ namespace HamAndCheeseToastie.Controllers
             return Ok(user);
         }
 
+        //GET: User/Id/Transactions
+        [HttpGet("{id}/Transactions")]
+        public async Task<IActionResult> GetUserTransactions(int id)
+        {
+            var transactions = await _context.Transaction
+                .Include(t => t.TransactionItems)
+                    .ThenInclude(ti => ti.Product)
+                .Where(t => t.UserId == id)
+                .Select(t => new TransactionDto
+                {
+                    TransactionId = t.TransactionId,
+                    TransactionDate = t.TransactionDate,
+                    TotalAmount = t.TotalAmount,
+                    Discount = t.Discount,
+                    TaxAmount = t.TaxAmount,
+                    UserId = t.UserId,
+                    PaymentMethod = t.PaymentMethod,
+                    TransactionItems = t.TransactionItems.Select(ti => new TransactionItemDto
+                    {
+                        Id = ti.Id,
+                        ProductId = ti.ProductId, // Ensure this aligns with the database column
+                        Quantity = ti.Quantity,
+                        UnitPrice = ti.UnitPrice,
+                        TotalPrice = ti.TotalPrice,
+                        Product = ti.Product != null ? new ProductDto
+                        {
+                            ProductId = ti.Product.ID,
+                            Name = ti.Product.Name,
+                            BrandName = ti.Product.BrandName,
+                            Weight = ti.Product.Weight
+                        } : null
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            if (!transactions.Any())
+            {
+                return NotFound(new { Message = $"No transactions found for user with ID {id}." });
+            }
+
+            return Ok(transactions);
+        }
+
+
+
+
+
+
+
         // POST: api/User
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] User user)
@@ -57,12 +107,25 @@ namespace HamAndCheeseToastie.Controllers
                 return BadRequest(new { message = "User data is required" });
             }
 
+            // Hash the password sent from the frontend
+            if (!string.IsNullOrWhiteSpace(user.password_hash))
+            {
+                user.password_hash = PasswordHasher.HashPassword(user.password_hash);
+            }
+            else
+            {
+                _logger.LogWarning("Password is required");
+                return BadRequest(new { message = "Password is required" });
+            }
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Created new user with ID {UserId}", user.id);
             return CreatedAtAction(nameof(Get), new { id = user.id }, user);
         }
+
+
 
         // PUT: api/User/5
         [HttpPut("{id}")]

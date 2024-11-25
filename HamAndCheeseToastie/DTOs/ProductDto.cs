@@ -14,6 +14,7 @@
         public decimal WholesalePrice { get; set; }
         public string EAN13Barcode { get; set; } = string.Empty;
         public string ImagePath { get; set; }
+        public object ProductId { get; internal set; }
     }
 
 }

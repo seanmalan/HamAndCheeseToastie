@@ -43,6 +43,26 @@ namespace HamAndCheeseToastie.Controllers
             var transactions = await _context.Transaction
                 .Where(t => t.TransactionDate >= fromDate && t.TransactionDate <= toDate)
                 .OrderByDescending(t => t.TransactionDate) // Sort by date, most recent first
+                .Include(t => t.Customer)
+                .Include(t => t.TransactionItems)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.TransactionDate,
+                    t.TotalAmount,
+                    t.Discount,
+                    t.PaymentMethod,
+                    t.TaxAmount,
+                    t.Customer,
+                    t.UserId,
+                    TransactionItems = t.TransactionItems.Select(item => new
+                    {
+                        item.Id,
+                        item.Product,
+                        item.Quantity,
+                        item.UnitPrice
+                    })
+                })
                 .ToListAsync();
 
             if (transactions == null || !transactions.Any())
@@ -55,10 +75,41 @@ namespace HamAndCheeseToastie.Controllers
 
 
         // GET: api/Transaction/5
+        // GET: api/Transaction/5
+        // GET: api/Transaction/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Transaction>> GetTransaction(int id)
+        public async Task<ActionResult<TransactionDto>> GetTransaction(int id)
         {
-            var transaction = await _context.Transaction.FindAsync(id);
+            var transaction = await _context.Transaction
+                .Include(t => t.TransactionItems) // Include TransactionItems
+                    .ThenInclude(ti => ti.Product) // Include Product details
+                .Where(t => t.TransactionId == id)
+                .Select(t => new TransactionDto
+                {
+                    TransactionId = t.TransactionId,
+                    TransactionDate = t.TransactionDate,
+                    TotalAmount = t.TotalAmount,
+                    Discount = t.Discount,
+                    TaxAmount = t.TaxAmount,
+                    UserId = t.UserId,
+                    PaymentMethod = t.PaymentMethod,
+                    TransactionItems = t.TransactionItems.Select(ti => new TransactionItemDto
+                    {
+                        Id = ti.Id,
+                        ProductId = ti.ProductId, // Ensure ProductId matches the database column
+                        Quantity = ti.Quantity,
+                        UnitPrice = ti.UnitPrice,
+                        TotalPrice = ti.TotalPrice,
+                        Product = ti.Product != null ? new ProductDto
+                        {
+                            ProductId = ti.Product.ID,
+                            Name = ti.Product.Name,
+                            BrandName = ti.Product.BrandName,
+                            Weight = ti.Product.Weight
+                        } : null
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
 
             if (transaction == null)
             {
@@ -68,19 +119,34 @@ namespace HamAndCheeseToastie.Controllers
             return Ok(transaction);
         }
 
+
+
+
+        // PUT: api/Transaction/5
         // PUT: api/Transaction/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTransaction(int id, [FromBody] Transaction transaction)
+        public async Task<IActionResult> UpdateTransaction(int id, Transaction transaction)
         {
             if (id != transaction.TransactionId)
             {
                 return BadRequest(new { Message = "Transaction ID mismatch." });
             }
 
-            // Validate the transaction (you can add custom validation here)
-            if (!ModelState.IsValid)
+            // Attach customer if it's a navigation property
+            if (transaction.Customer != null)
             {
-                return BadRequest(ModelState);
+                _context.Entry(transaction.Customer).State = EntityState.Modified;
+            }
+
+            // Attach transaction items if any
+            if (transaction.TransactionItems != null)
+            {
+                foreach (var item in transaction.TransactionItems)
+                {
+                    _context.Entry(item).State = item.Id == 0
+                        ? EntityState.Added
+                        : EntityState.Modified;
+                }
             }
 
             _context.Entry(transaction).State = EntityState.Modified;
@@ -91,15 +157,19 @@ namespace HamAndCheeseToastie.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!TransactionExists(id))
+                if (!_context.Transaction.Any(e => e.TransactionId == id))
                 {
-                    return NotFound(new { Message = $"Transaction with ID {id} not found." });
+                    return NotFound(new { Message = "Transaction not found for update." });
                 }
-                throw; // Rethrow if there's a concurrency issue not related to existence
+                else
+                {
+                    throw;
+                }
             }
 
             return NoContent();
         }
+
 
         // POST: api/Transaction
         [HttpPost]

@@ -12,6 +12,7 @@ namespace HamAndCheeseToastie.Controllers
     public class MauiController : ControllerBase
     {
         private readonly DatabaseContext _context;
+        private readonly ILogger<UserController> _logger;
 
         public MauiController(DatabaseContext context)
         {
@@ -22,9 +23,14 @@ namespace HamAndCheeseToastie.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllProductsMaui()
+        public async Task<IActionResult> GetAllProductsMaui(int offset = 0, int limit = 30)
         {
-            var products = await _context.Products
+            if (limit <= 0 || offset < 0)
+            {
+                return BadRequest("Offset and limit must be non-negative, and limit must be greater than 0.");
+            }
+
+            var productsQuery = _context.Products
                 .Include(p => p.Category)
                 .Select(p => new ProductDto
                 {
@@ -32,19 +38,31 @@ namespace HamAndCheeseToastie.Controllers
                     Name = p.Name,
                     BrandName = p.BrandName,
                     Weight = p.Weight,
-                    CategoryId = p.CategoryId, // Ensure this matches the property correctly
-                    CategoryName = p.Category.Name, // CategoryName mapped to the Category's Name property
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.Category.Name,
                     CurrentStockLevel = p.CurrentStockLevel,
                     MinimumStockLevel = p.MinimumStockLevel,
                     Price = p.Price,
                     WholesalePrice = p.WholesalePrice,
                     EAN13Barcode = p.EAN13Barcode,
                     ImagePath = p.ImagePath
-                })
+                });
+
+            var totalProducts = await productsQuery.CountAsync();
+            var products = await productsQuery
+                .Skip(offset)
+                .Take(limit)
                 .ToListAsync();
 
-            return Ok(products);
+            var result = new
+            {
+                TotalCount = totalProducts,
+                Products = products
+            };
+
+            return Ok(result);
         }
+
 
         [HttpGet("product/search")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -305,7 +323,7 @@ namespace HamAndCheeseToastie.Controllers
                     t.Discount,
                     t.PaymentMethod,
                     t.TaxAmount,
-                    t.CashierId,
+                    t.UserId,
                     t.CustomerId
                 })
                 .ToListAsync();
@@ -409,6 +427,18 @@ namespace HamAndCheeseToastie.Controllers
             // Return the transaction with its items
             return Ok(transaction);
         }
+
+
+        // GET: api/Maui/Users
+        [HttpGet("Users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            _logger.LogInformation("Fetching all users in MAUI");
+            var users = await _context.Users.ToListAsync();
+            return Ok(users);
+        }
+
+
 
 
     }

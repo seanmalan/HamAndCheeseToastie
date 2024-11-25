@@ -23,11 +23,8 @@ public class Transaction
     [Column("taxamount")]
     public decimal TaxAmount { get; set; }
 
-    [Column("cashierid")] // This maps to the foreign key in PostgreSQL
-    public int CashierId { get; set; } // Foreign key pointing to `Cashier.Id`
-
-    [ForeignKey("CashierId")]
-    public Cashier Cashier { get; set; } // Navigation property
+    [Column("userid")] // This maps to the foreign key in PostgreSQL
+    public int UserId { get; set; } // Foreign key pointing to `Cashier.Id`
 
     [Column("customerid")]
     public int CustomerId { get; set; }
