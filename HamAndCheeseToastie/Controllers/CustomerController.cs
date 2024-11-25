@@ -120,6 +120,11 @@ namespace HamAndCheeseToastie.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PutCustomer(int id, Customer customer)
         {
+            if (customer == null)
+            {
+                return BadRequest("Customer data is missing.");
+            }
+
             if (id != customer.CustomerId)
             {
                 return BadRequest("Customer ID mismatch.");

@@ -30,7 +30,7 @@ namespace HamAndCheeseToastie.Services
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(expiryMinutes),
                 SigningCredentials = credentials,
-                Issuer = "https://192.168.1.2:7276", // Set your issuer
+                Issuer = "https://localhost:7276", // Set your issuer
                 Audience = "http://localhost:3000" // Set your audience (this should match your React app's frontend URL)
             };
 
