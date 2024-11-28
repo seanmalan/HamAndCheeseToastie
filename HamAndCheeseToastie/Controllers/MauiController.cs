@@ -12,7 +12,7 @@ namespace HamAndCheeseToastie.Controllers
     public class MauiController : ControllerBase
     {
         private readonly DatabaseContext _context;
-        private readonly ILogger<UserController> _logger;
+        private readonly ILogger<MauiController> _logger;
 
         public MauiController(DatabaseContext context)
         {
@@ -354,26 +354,6 @@ namespace HamAndCheeseToastie.Controllers
         }
         
 
-        // POST: api/Transaction
-        [HttpPost("Transactions")]
-        public async Task<ActionResult<Transaction>> PostTransaction([FromBody] Transaction transaction)
-        {
-            // Validate the transaction (you can add custom validation here)
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            _context.Transaction.Add(transaction);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetTransaction), new { id = transaction.TransactionId }, transaction);
-        }
-
-
-
-
-
 
         [HttpGet("Transactions/{transactionId}/Items")]
         public async Task<IActionResult> GetTransactionItems(int transactionId)
@@ -394,13 +374,6 @@ namespace HamAndCheeseToastie.Controllers
 
 
         /// <summary>
-        /// Retrieves filtered transactions based on date range and count.
-        /// </summary>
-        /// <param name="dateFrom">Start date of the transaction period.</param>
-        /// <param name="dateTo">End date of the transaction period.</param>
-        /// <param name="count">Number of transactions to retrieve.</param>
-        /// <response code="200">Returns the filtered list of transactions.</response>
-        /// <summary>
         /// Retrieves a transaction by ID along with its associated transaction items.
         /// </summary>
         /// <param name="id">The ID of the transaction.</param>
@@ -411,22 +384,191 @@ namespace HamAndCheeseToastie.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetTransactionWithItems(int id)
         {
-            // Query the database for the transaction by ID, including its items
+            // First get the transaction
             var transaction = await _context.Transaction
-                .Include(t => t.TransactionItems)
-                    .ThenInclude(ti => ti.Product) // Include product details if needed
-                .Include(t => t.Customer) // Include customer details if needed
                 .FirstOrDefaultAsync(t => t.TransactionId == id);
 
-            // If the transaction is not found, return a 404 Not Found response
             if (transaction == null)
             {
-                return NotFound($"Transaction with ID {id} was not found.");
+                return NotFound(new { Message = $"Transaction with ID {id} not found." });
             }
 
-            // Return the transaction with its items
-            return Ok(transaction);
+            // Then get the transaction items with their associated products
+            var items = await _context.TransactionItem
+                .Where(ti => ti.TransactionId == id)
+                .Join(
+                    _context.Products,
+                    ti => ti.ProductId,
+                    p => p.ID,
+                    (ti, p) => new
+                    {
+                        ti.Id,
+                        ti.ProductId,
+                        ProductName = p.Name,
+                        ti.Quantity,
+                        ti.UnitPrice,
+                        ti.TotalPrice
+                    })
+                .ToListAsync();
+
+            var result = new
+            {
+                TransactionId = transaction.TransactionId,
+                TransactionDate = transaction.TransactionDate,
+                TotalAmount = transaction.TotalAmount,
+                PaymentMethod = transaction.PaymentMethod.ToString(),
+                Discount = transaction.Discount,
+                TaxAmount = transaction.TaxAmount,
+                UserId = transaction.UserId,
+                CustomerId = transaction.CustomerId,
+                Items = items
+            };
+
+            return Ok(result);
         }
+
+
+        /// <summary>
+        /// Creates a new transaction
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/Maui/Transaction
+        ///     {
+        ///         "transactionDate": "2024-11-28T21:11:27.114Z",
+        ///         "totalAmount": 13.50,
+        ///         "discount": 0,
+        ///         "taxAmount": 0,
+        ///         "userId": 1,
+        ///         "customerId": 2,
+        ///         "paymentMethod": "DebitCard"
+        ///     }
+        /// </remarks>
+        [HttpPost("Transactions")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<TransactionDto>> PostTransaction([FromBody] TransactionCreateDto createDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { Message = "Invalid model state" });
+                }
+
+                if (createDto.UserId <= 0)
+                {
+                    return BadRequest(new { Message = "Invalid or missing UserId" });
+                }
+
+                if (createDto.CustomerId <= 0)
+                {
+                    return BadRequest(new { Message = "Invalid or missing CustomerId" });
+                }
+
+                // Validate that the customer exists
+                var customerExists = await _context.Customer.AnyAsync(c => c.CustomerId == createDto.CustomerId);
+                if (!customerExists)
+                {
+                    return BadRequest(new { Message = $"Customer with ID {createDto.CustomerId} not found" });
+                }
+
+                var transaction = new Transaction
+                {
+                    TransactionDate = createDto.TransactionDate,
+                    TotalAmount = createDto.TotalAmount,
+                    Discount = createDto.Discount,
+                    PaymentMethod = Enum.Parse<PaymentMethod>(createDto.PaymentMethod),
+                    TaxAmount = createDto.TaxAmount,
+                    UserId = createDto.UserId,
+                    CustomerId = createDto.CustomerId
+                };
+
+                _context.Transaction.Add(transaction);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction(
+                    nameof(GetTransaction),
+                    new { id = transaction.TransactionId },
+                    new { TransactionId = transaction.TransactionId });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Message = "Error creating transaction",
+                    Error = ex.Message
+                });
+            }
+        }
+
+
+
+        [HttpPost("Transactions/{transactionId}/Items")]
+        public async Task<ActionResult> PostTransactionItems(int transactionId, [FromBody] List<TransactionItemDto> items)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                // Start a transaction to ensure both operations complete or neither does
+                using var transaction = await _context.Database.BeginTransactionAsync();
+
+                try
+                {
+                    // First, add the transaction items
+                    var transactionItems = items.Select(item => new TransactionItem
+                    {
+                        TransactionId = transactionId,
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                        TotalPrice = item.TotalPrice
+                    }).ToList();
+
+                    await _context.TransactionItem.AddRangeAsync(transactionItems);
+
+                    // Now update the product stock levels
+                    foreach (var item in items)
+                    {
+                        var product = await _context.Products
+                            .FirstOrDefaultAsync(p => p.ID == item.ProductId);
+
+                        if (product != null)
+                        {
+                            product.CurrentStockLevel -= item.Quantity;
+                            // Ensure stock level doesn't go negative
+                            if (product.CurrentStockLevel < 0)
+                            {
+                                product.CurrentStockLevel = 0;
+                            }
+
+                            _context.Products.Update(product);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return Ok(new { Message = "Transaction items added and stock levels updated successfully" });
+                }
+                catch (Exception)
+                {
+                    // If anything goes wrong, roll back both operations
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = $"Error processing transaction: {ex.Message}" });
+            }
+        }
+
 
 
         // GET: api/Maui/Users

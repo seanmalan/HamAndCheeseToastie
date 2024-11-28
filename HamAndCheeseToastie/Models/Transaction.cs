@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
+[Table("transactions")] // Adding table name for consistency
 public class Transaction
 {
     [Key]
@@ -23,14 +24,12 @@ public class Transaction
     [Column("taxamount")]
     public decimal TaxAmount { get; set; }
 
-    [Column("userid")] // This maps to the foreign key in PostgreSQL
-    public int UserId { get; set; } // Foreign key pointing to `Cashier.Id`
+    [Column("userid")]
+    public int UserId { get; set; }
 
     [Column("customerid")]
     public int CustomerId { get; set; }
 
     [ForeignKey("CustomerId")]
     public Customer Customer { get; set; }
-
-    public ICollection<TransactionItem> TransactionItems { get; set; } = new List<TransactionItem>();
 }

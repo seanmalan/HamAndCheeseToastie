@@ -1,51 +1,44 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using HamAndCheeseToastie.Database;
+using HamAndCheeseToastie.DTOs;
+using HamAndCheeseToastie.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using HamAndCheeseToastie.Database;
-using HamAndCheeseToastie.Models;
-using HamAndCheeseToastie.DTOs;
 
-namespace HamAndCheeseToastie.Controllers
+[Route("api/[controller]")]
+[ApiController]
+public class TransactionController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class TransactionController : ControllerBase
+    private readonly DatabaseContext _context;
+
+    public TransactionController(DatabaseContext context)
     {
-        private readonly DatabaseContext _context;
+        _context = context;
+    }
 
-        public TransactionController(DatabaseContext context)
-        {
-            _context = context;
-        }
-
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetTransactions(
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTransactions(
         [FromQuery] DateTime? dateFrom = null,
         [FromQuery] DateTime? dateTo = null)
+    {
+        var fromDate = (dateFrom ?? DateTime.Now.AddDays(-30)).ToUniversalTime();
+        var toDate = (dateTo ?? DateTime.Now).ToUniversalTime();
+
+        if (fromDate > toDate)
         {
-            // Default values if dates are not provided
-            var fromDate = (dateFrom ?? DateTime.Now.AddDays(-30)).ToUniversalTime();
-            var toDate = (dateTo ?? DateTime.Now).ToUniversalTime();
+            return BadRequest("Invalid date range: 'dateFrom' must be earlier than 'dateTo'.");
+        }
 
-            // Validate the date range
-            if (fromDate > toDate)
-            {
-                return BadRequest("Invalid date range: 'dateFrom' must be earlier than 'dateTo'.");
-            }
-
-            // Fetch transactions within the date range
-            var transactions = await _context.Transaction
-                .Where(t => t.TransactionDate >= fromDate && t.TransactionDate <= toDate)
-                .OrderByDescending(t => t.TransactionDate) // Sort by date, most recent first
-                .Include(t => t.Customer)
-                .Include(t => t.TransactionItems)
-                .Select(t => new
+        var transactions = await _context.Transaction
+            .Where(t => t.TransactionDate >= fromDate && t.TransactionDate <= toDate)
+            .OrderByDescending(t => t.TransactionDate)
+            .Join(
+                _context.Customer,
+                t => t.CustomerId,
+                c => c.CustomerId,
+                (t, c) => new
                 {
                     t.TransactionId,
                     t.TransactionDate,
@@ -53,189 +46,246 @@ namespace HamAndCheeseToastie.Controllers
                     t.Discount,
                     t.PaymentMethod,
                     t.TaxAmount,
-                    t.Customer,
                     t.UserId,
-                    TransactionItems = t.TransactionItems.Select(item => new
+                    Customer = new
                     {
-                        item.Id,
-                        item.Product,
-                        item.Quantity,
-                        item.UnitPrice
-                    })
+                        c.CustomerId,
+                        c.FirstName,
+                        c.LastName,
+                        c.Email,
+                        c.PhoneNumber,
+                        c.IsLoyaltyMember
+                    }
                 })
-                .ToListAsync();
+            .ToListAsync();
 
-            if (transactions == null || !transactions.Any())
-            {
-                return NotFound("No transactions found for the specified date range.");
-            }
-
-            return Ok(transactions);
+        if (!transactions.Any())
+        {
+            return NotFound("No transactions found for the specified date range.");
         }
 
-
-        // GET: api/Transaction/5
-        // GET: api/Transaction/5
-        // GET: api/Transaction/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TransactionDto>> GetTransaction(int id)
-        {
-            var transaction = await _context.Transaction
-                .Include(t => t.TransactionItems) // Include TransactionItems
-                    .ThenInclude(ti => ti.Product) // Include Product details
-                .Where(t => t.TransactionId == id)
-                .Select(t => new TransactionDto
+        var transactionIds = transactions.Select(t => t.TransactionId).ToList();
+        var transactionItems = await _context.TransactionItem
+            .Where(ti => transactionIds.Contains(ti.TransactionId))
+            .Join(
+                _context.Products,
+                ti => ti.ProductId,
+                p => p.ID,
+                (ti, p) => new
                 {
-                    TransactionId = t.TransactionId,
-                    TransactionDate = t.TransactionDate,
-                    TotalAmount = t.TotalAmount,
-                    Discount = t.Discount,
-                    TaxAmount = t.TaxAmount,
-                    UserId = t.UserId,
-                    PaymentMethod = t.PaymentMethod,
-                    TransactionItems = t.TransactionItems.Select(ti => new TransactionItemDto
+                    ti.TransactionId,
+                    ti.Id,
+                    ti.Quantity,
+                    ti.UnitPrice,
+                    Product = new
                     {
-                        Id = ti.Id,
-                        ProductId = ti.ProductId, // Ensure ProductId matches the database column
-                        Quantity = ti.Quantity,
-                        UnitPrice = ti.UnitPrice,
-                        TotalPrice = ti.TotalPrice,
-                        Product = ti.Product != null ? new ProductDto
-                        {
-                            ProductId = ti.Product.ID,
-                            Name = ti.Product.Name,
-                            BrandName = ti.Product.BrandName,
-                            Weight = ti.Product.Weight
-                        } : null
-                    }).ToList()
+                        p.ID,
+                        p.Name,
+                        p.BrandName,
+                        p.Weight,
+                        p.CategoryId,
+                        p.CurrentStockLevel,
+                        p.MinimumStockLevel,
+                        p.Price,
+                        p.WholesalePrice,
+                        p.EAN13Barcode
+                    }
                 })
-                .FirstOrDefaultAsync();
+            .ToListAsync();
 
-            if (transaction == null)
-            {
-                return NotFound(new { Message = $"Transaction with ID {id} not found." });
-            }
-
-            return Ok(transaction);
-        }
-
-
-
-
-        // PUT: api/Transaction/5
-        // PUT: api/Transaction/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTransaction(int id, Transaction transaction)
+        var result = transactions.Select(t => new
         {
-            if (id != transaction.TransactionId)
-            {
-                return BadRequest(new { Message = "Transaction ID mismatch." });
-            }
-
-            // Attach customer if it's a navigation property
-            if (transaction.Customer != null)
-            {
-                _context.Entry(transaction.Customer).State = EntityState.Modified;
-            }
-
-            // Attach transaction items if any
-            if (transaction.TransactionItems != null)
-            {
-                foreach (var item in transaction.TransactionItems)
+            t.TransactionId,
+            t.TransactionDate,
+            t.TotalAmount,
+            t.Discount,
+            t.PaymentMethod,
+            t.TaxAmount,
+            t.Customer,
+            t.UserId,
+            TransactionItems = transactionItems
+                .Where(ti => ti.TransactionId == t.TransactionId)
+                .Select(ti => new
                 {
-                    _context.Entry(item).State = item.Id == 0
-                        ? EntityState.Added
-                        : EntityState.Modified;
-                }
-            }
-
-            _context.Entry(transaction).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Transaction.Any(e => e.TransactionId == id))
-                {
-                    return NotFound(new { Message = "Transaction not found for update." });
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-
-        // POST: api/Transaction
-        [HttpPost]
-        public async Task<ActionResult<Transaction>> PostTransaction([FromBody] Transaction transaction)
-        {
-            // Validate the transaction (you can add custom validation here)
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            _context.Transaction.Add(transaction);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetTransaction), new { id = transaction.TransactionId }, transaction);
-        }
-
-        // DELETE: api/Transaction/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTransaction(int id)
-        {
-            var transaction = await _context.Transaction.FindAsync(id);
-            if (transaction == null)
-            {
-                return NotFound(new { Message = $"Transaction with ID {id} not found." });
-            }
-
-            _context.Transaction.Remove(transaction);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        //retrive transactions from a specified date and limit
-        // GET: api/Transaction
-        [HttpGet("api/maui/transactions")]
-        public async Task<IActionResult> GetTransactions(DateTime? dateFrom = null, DateTime? dateTo = null, int count = 100)
-        {
-            // Set default date range if not provided
-            dateFrom ??= DateTime.MinValue;
-            dateTo ??= DateTime.MaxValue;
-
-            // Fetch transactions within the specified date range and limit the count
-            var transactions = await _context.Transaction
-                .Where(t => t.TransactionDate >= dateFrom && t.TransactionDate <= dateTo)
-                .OrderByDescending(t => t.TransactionDate)
-                .Take(count)
-                .Select(t => new MauiTransactionDto()
-                {
-                    Id = t.TransactionId,
-                    DateTime = t.TransactionDate,
-                    TotalAmount = t.TotalAmount,
-                    Discount = t.Discount,
-                    //PaymentMethod = t.PaymentMethod,
-                    GServiceTax = t.TaxAmount,
-                    CustomerId = t.CustomerId
+                    ti.Id,
+                    ti.Product,
+                    ti.Quantity,
+                    ti.UnitPrice
                 })
-                .ToListAsync();
+        });
 
-            return Ok(transactions);
-        }
+        return Ok(result);
+    }
 
 
-        private bool TransactionExists(int id)
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<TransactionDto>> GetTransaction(int id)
+    {
+        var transaction = await _context.Transaction
+            .Where(t => t.TransactionId == id)
+            .Select(t => new TransactionDto
+            {
+                TransactionId = t.TransactionId,
+                TransactionDate = t.TransactionDate,
+                TotalAmount = t.TotalAmount,
+                Discount = t.Discount,
+                TaxAmount = t.TaxAmount,
+                UserId = t.UserId,
+                PaymentMethod = t.PaymentMethod.ToString()
+            })
+            .FirstOrDefaultAsync();
+
+        if (transaction == null)
         {
-            return _context.Transaction.Any(e => e.TransactionId == id);
+            return NotFound(new { Message = $"Transaction with ID {id} not found." });
         }
+
+        // Get transaction items separately
+        var items = await _context.TransactionItem
+            .Where(ti => ti.TransactionId == id)
+            .Join(
+                _context.Products,
+                ti => ti.ProductId,
+                p => p.ID,
+                (ti, p) => new TransactionItemDto
+                {
+                    Id = ti.Id,
+                    ProductId = ti.ProductId,
+                    Quantity = ti.Quantity,
+                    UnitPrice = ti.UnitPrice,
+                    TotalPrice = ti.TotalPrice,
+                    Product = new MauiProductDto
+                    {
+                        ProductID = p.ID,
+                        ProductName = p.Name,
+                        BrandName = p.BrandName,
+                        ProductWeight = p.Weight
+                    }
+                })
+            .ToListAsync();
+
+        transaction.TransactionItems = items;
+        return Ok(transaction);
+    }
+
+
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateTransaction(int id, TransactionDto transactionDto)
+    {
+        if (id != transactionDto.TransactionId)
+        {
+            return BadRequest(new { Message = "Transaction ID mismatch." });
+        }
+
+        var transaction = new Transaction
+        {
+            TransactionId = transactionDto.TransactionId,
+            TransactionDate = transactionDto.TransactionDate,
+            TotalAmount = transactionDto.TotalAmount,
+            Discount = transactionDto.Discount,
+            PaymentMethod = Enum.Parse<PaymentMethod>(transactionDto.PaymentMethod),
+            TaxAmount = transactionDto.TaxAmount,
+            UserId = transactionDto.UserId,
+            CustomerId = transactionDto.CustomerId
+        };
+
+        _context.Entry(transaction).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!TransactionExists(id))
+            {
+                return NotFound(new { Message = "Transaction not found for update." });
+            }
+            throw;
+        }
+
+        return NoContent();
+    }
+
+
+
+    [HttpPost]
+    public async Task<ActionResult<TransactionDto>> PostTransaction([FromBody] TransactionDto transactionDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var transaction = new Transaction
+        {
+            TransactionDate = transactionDto.TransactionDate,
+            TotalAmount = transactionDto.TotalAmount,
+            Discount = transactionDto.Discount,
+            PaymentMethod = Enum.Parse<PaymentMethod>(transactionDto.PaymentMethod),
+            TaxAmount = transactionDto.TaxAmount,
+            UserId = transactionDto.UserId,
+            CustomerId = transactionDto.CustomerId
+        };
+
+        _context.Transaction.Add(transaction);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(
+            nameof(GetTransaction),
+            new { id = transaction.TransactionId },
+            new { TransactionId = transaction.TransactionId });
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteTransaction(int id)
+    {
+        var transaction = await _context.Transaction.FindAsync(id);
+        if (transaction == null)
+        {
+            return NotFound(new { Message = $"Transaction with ID {id} not found." });
+        }
+
+        // First delete related transaction items
+        var relatedItems = await _context.TransactionItem
+            .Where(ti => ti.TransactionId == id)
+            .ToListAsync();
+
+        _context.TransactionItem.RemoveRange(relatedItems);
+        _context.Transaction.Remove(transaction);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpGet("api/maui/transactions")]
+    public async Task<IActionResult> GetTransactions(DateTime? dateFrom = null, DateTime? dateTo = null, int count = 100)
+    {
+        dateFrom ??= DateTime.MinValue;
+        dateTo ??= DateTime.MaxValue;
+
+        var transactions = await _context.Transaction
+            .Where(t => t.TransactionDate >= dateFrom && t.TransactionDate <= dateTo)
+            .OrderByDescending(t => t.TransactionDate)
+            .Take(count)
+            .Select(t => new MauiTransactionDto
+            {
+                Id = t.TransactionId,
+                DateTime = t.TransactionDate,
+                TotalAmount = t.TotalAmount,
+                Discount = t.Discount,
+                GServiceTax = t.TaxAmount,
+                CustomerId = t.CustomerId
+            })
+            .ToListAsync();
+
+        return Ok(transactions);
+    }
+
+    private bool TransactionExists(int id)
+    {
+        return _context.Transaction.Any(e => e.TransactionId == id);
     }
 }
