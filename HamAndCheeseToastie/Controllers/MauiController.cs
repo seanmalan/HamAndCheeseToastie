@@ -630,19 +630,13 @@ namespace HamAndCheeseToastie.Controllers
 
 
         #region Stock Update
-
         [HttpPut("stock-adjustment")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateProductStock([FromBody] StockAdjustmentDto adjustment)
         {
             if (adjustment == null)
             {
                 return BadRequest("Adjustment data is required.");
             }
-
-            System.Diagnostics.Debug.WriteLine(adjustment);
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -653,51 +647,49 @@ namespace HamAndCheeseToastie.Controllers
                     .Include(p => p.Category)
                     .FirstOrDefaultAsync(p => p.EAN13Barcode == adjustment.Ean13Barcode);
 
-                if (product == null)
-                {
-                    // If product doesn't exist and we have product details, create new product
-                    if (!string.IsNullOrEmpty(adjustment.Name))
-                    {
-                        var category = await _context.Categories
-                            .FirstOrDefaultAsync(c => c.Name == adjustment.CategoryName);
-
-                        product = new Product
-                        {
-                            EAN13Barcode = adjustment.Ean13Barcode,
-                            Name = adjustment.Name,
-                            BrandName = adjustment.BrandName ?? string.Empty,
-                            CategoryId = category?.CategoryId ?? 1, // Default category if not found
-                            Weight = adjustment.Weight ?? string.Empty,
-                            CurrentStockLevel = 0,
-                            MinimumStockLevel = 0, // Set a default or make it configurable
-                            WholesalePrice = adjustment.WholesalePrice ?? 0,
-                            Price = adjustment.Price ?? 0,
-                            ImagePath = string.Empty // Set default image path
-                        };
-
-                        await _context.Products.AddAsync(product);
-                        await _context.SaveChangesAsync();
-                    }
-                    else
-                    {
-                        return NotFound($"Product with barcode {adjustment.Ean13Barcode} not found.");
-                    }
-                }
-
-
-
-                // Store old values for logging
+                // Store initial state for logging
                 var oldValues = new
                 {
-                    StockLevel = product.CurrentStockLevel,
-                    Name = product.Name,
-                    BrandName = product.BrandName,
-                    CategoryName = product.Category.Name,
-                    WholesalePrice = product.WholesalePrice,
-                    Price = product.Price
+                    StockLevel = product?.CurrentStockLevel ?? 0,
+                    Name = product?.Name ?? string.Empty,
+                    BrandName = product?.BrandName ?? string.Empty,
+                    CategoryName = product?.Category?.Name ?? string.Empty,
+                    WholesalePrice = product?.WholesalePrice ?? 0m,
+                    Price = product?.Price ?? 0m
                 };
 
-                // Update product details if provided
+                if (product == null)
+                {
+                    // Product doesn't exist, create new one
+                    var category = await _context.Categories
+                        .FirstOrDefaultAsync(c => c.Name == adjustment.CategoryName);
+
+                    if (category == null)
+                    {
+                        category = new Category { Name = adjustment.CategoryName };
+                        await _context.Categories.AddAsync(category);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    product = new Product
+                    {
+                        EAN13Barcode = adjustment.Ean13Barcode,
+                        Name = adjustment.Name,
+                        BrandName = adjustment.BrandName ?? string.Empty,
+                        CategoryId = category.CategoryId,
+                        Weight = adjustment.Weight ?? string.Empty,
+                        CurrentStockLevel = 0,
+                        MinimumStockLevel = 0,
+                        WholesalePrice = adjustment.WholesalePrice ?? 0,
+                        Price = adjustment.Price ?? 0,
+                        ImagePath = string.Empty
+                    };
+
+                    await _context.Products.AddAsync(product);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Update existing product
                 if (!string.IsNullOrEmpty(adjustment.Name))
                     product.Name = adjustment.Name;
                 if (!string.IsNullOrEmpty(adjustment.BrandName))
@@ -706,21 +698,8 @@ namespace HamAndCheeseToastie.Controllers
                 {
                     var category = await _context.Categories
                         .FirstOrDefaultAsync(c => c.Name == adjustment.CategoryName);
-
                     if (category != null)
-                    {
                         product.CategoryId = category.CategoryId;
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"Category not found: {adjustment.CategoryName}");
-                        // Either create a new category or use a default one
-                        System.Diagnostics.Debug.WriteLine($"Category not found: {adjustment.CategoryName}");
-                        category = new Category { Name = adjustment.CategoryName };
-                        await _context.Categories.AddAsync(category);
-                        await _context.SaveChangesAsync(); // Save to get the new category ID
-                        product.CategoryId = category.CategoryId;
-                    }
                 }
                 if (!string.IsNullOrEmpty(adjustment.Weight))
                     product.Weight = adjustment.Weight;
@@ -737,16 +716,6 @@ namespace HamAndCheeseToastie.Controllers
                 }
                 product.CurrentStockLevel = newStockLevel;
 
-                _logger.LogInformation($"Updating product {product.ID}: Old stock {oldValues.StockLevel} -> New stock {newStockLevel}");
-                System.Diagnostics.Debug.WriteLine($"Updating product {product.ID}: Old stock {oldValues.StockLevel} -> New stock {newStockLevel}");
-
-
-
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation($"Product update saved. Current stock: {product.CurrentStockLevel}");
-                System.Diagnostics.Debug.WriteLine($"Product update saved. Current stock: {product.CurrentStockLevel}");
-
                 // Create inventory log entry
                 var log = new InventoryLog
                 {
@@ -754,14 +723,14 @@ namespace HamAndCheeseToastie.Controllers
                     Barcode = product.EAN13Barcode,
                     ChangeType = BuildChangeTypeString(product, oldValues),
                     StockOldValue = oldValues.StockLevel.ToString(),
-                    StockNewValue = newStockLevel.ToString(),
+                    StockNewValue = product.CurrentStockLevel.ToString(),
                     ReductionReason = adjustment.StockAdjustment < 0 ? adjustment.ReductionReason : null,
                     NameOldValue = oldValues.Name,
                     NameNewValue = product.Name,
                     BrandOldValue = oldValues.BrandName,
                     BrandNewValue = product.BrandName,
                     CategoryOldValue = oldValues.CategoryName,
-                    CategoryNewValue = product.Category.Name,
+                    CategoryNewValue = product.Category?.Name,
                     PriceOldValue = oldValues.Price,
                     PriceNewValue = product.Price,
                     WholesalePriceOldValue = oldValues.WholesalePrice,
@@ -776,7 +745,7 @@ namespace HamAndCheeseToastie.Controllers
                 return Ok(new
                 {
                     Message = "Stock updated successfully",
-                    NewStockLevel = newStockLevel,
+                    NewStockLevel = product.CurrentStockLevel,
                     ProductId = product.ID
                 });
             }
