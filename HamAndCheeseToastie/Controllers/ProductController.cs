@@ -187,7 +187,7 @@ namespace HamAndCheeseToastie.Controllers
             csv.Context.RegisterClassMap<ProductMap>();
 
             var records = csv.GetRecords<ProductDto>().ToList();
-            var existingCategoryIds = await _context.Categories.Select(c => c.Id).ToListAsync();
+            var existingCategoryIds = await _context.Categories.Select(c => c.CategoryId).ToListAsync();
 
             foreach (var record in records)
             {

@@ -19,6 +19,7 @@ namespace HamAndCheeseToastie.Database
         public DbSet<Transaction> Transaction { get; set; } = default!;
         public DbSet<TransactionItem> TransactionItem { get; set; } = default!;
         public DbSet<Customer> Customer { get; set; } = default!;
+        public DbSet<InventoryLog> InventoryLog { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +36,72 @@ namespace HamAndCheeseToastie.Database
                     }
                 }
             }
+
+            // Updated Product configuration
+            modelBuilder.Entity<Product>(entity =>
+            {
+                entity.ToTable("products");
+                entity.HasKey(e => e.ID);
+
+                entity.Property(e => e.ID)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.Name)
+                    .HasColumnName("name")
+                    .IsRequired();
+
+                entity.Property(e => e.BrandName)
+                    .HasColumnName("brand_name");
+
+                entity.Property(e => e.Weight)
+                    .HasColumnName("weight");
+
+                entity.Property(e => e.CategoryId)
+                    .HasColumnName("category_id");
+
+                entity.Property(e => e.CurrentStockLevel)
+                    .HasColumnName("current_stock_level");
+
+                entity.Property(e => e.MinimumStockLevel)
+                    .HasColumnName("minimum_stock_level");
+
+                entity.Property(e => e.Price)
+                    .HasColumnName("price");
+
+                entity.Property(e => e.WholesalePrice)
+                    .HasColumnName("wholesale_price");
+
+                entity.Property(e => e.EAN13Barcode)
+                    .HasColumnName("ean13_barcode");
+
+                entity.Property(e => e.ImagePath)
+                    .HasColumnName("image_path");
+
+                // Configure relationship with Category
+                entity.HasOne(p => p.Category)
+                    .WithMany()
+                    .HasForeignKey(p => p.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Add unique constraint for barcode
+                entity.HasIndex(p => p.EAN13Barcode)
+                    .IsUnique();
+            });
+
+            modelBuilder.Entity<Category>(entity =>
+            {
+                entity.ToTable("categories");
+                entity.HasKey(e => e.CategoryId);
+
+                entity.Property(e => e.CategoryId)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.Name)
+                    .HasColumnName("name")
+                    .IsRequired();
+            });
 
             // User configuration
             modelBuilder.Entity<User>(entity =>

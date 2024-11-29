@@ -48,7 +48,7 @@ namespace HamAndCheeseToastie.Controllers
                 var categories = await _context.Categories
                     .Select(c => new MauiCategoryDto
                     {
-                        CategoryID = c.Id,
+                        CategoryID = c.CategoryId,
                         CategoryName = c.Name
                     })
                     .ToListAsync();
@@ -144,7 +144,7 @@ namespace HamAndCheeseToastie.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCategoryAsync(int id, [FromBody] Category category)
         {
-            if (id != category.Id || category == null || string.IsNullOrEmpty(category.Name))
+            if (id != category.CategoryId || category == null || string.IsNullOrEmpty(category.Name))
             {
                 return BadRequest(new { message = "Invalid category data" });
             }
@@ -211,7 +211,7 @@ namespace HamAndCheeseToastie.Controllers
             }
 
             var products = await _context.Products
-                .Where(p => p.CategoryId == category.Id)
+                .Where(p => p.CategoryId == category.CategoryId)
                 .ToListAsync();
 
             return Ok(products);
