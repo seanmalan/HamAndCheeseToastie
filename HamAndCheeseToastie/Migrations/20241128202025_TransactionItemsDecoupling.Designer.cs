@@ -3,6 +3,7 @@ using System;
 using HamAndCheeseToastie.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HamAndCheeseToastie.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241128202025_TransactionItemsDecoupling")]
+    partial class TransactionItemsDecoupling
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,19 +27,19 @@ namespace HamAndCheeseToastie.Migrations
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Category", b =>
                 {
-                    b.Property<int>("CategoryId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CategoryId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
 
-                    b.HasKey("CategoryId");
+                    b.HasKey("Id");
 
                     b.ToTable("categories", (string)null);
                 });
@@ -81,93 +84,65 @@ namespace HamAndCheeseToastie.Migrations
                     b.ToTable("customer", (string)null);
                 });
 
-            modelBuilder.Entity("HamAndCheeseToastie.Models.InventoryLog", b =>
+            modelBuilder.Entity("HamAndCheeseToastie.Models.Product", b =>
                 {
-                    b.Property<int>("LogID")
+                    b.Property<int>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LogID"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ID"));
 
-                    b.Property<string>("Barcode")
+                    b.Property<string>("BrandName")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("barcode");
+                        .HasColumnName("brand_name");
 
-                    b.Property<string>("BrandNewValue")
-                        .HasColumnType("text")
-                        .HasColumnName("brand_new_value");
-
-                    b.Property<string>("BrandOldValue")
-                        .HasColumnType("text")
-                        .HasColumnName("brand_old_value");
-
-                    b.Property<string>("CategoryNewValue")
-                        .HasColumnType("text")
-                        .HasColumnName("category_new_value");
-
-                    b.Property<string>("CategoryOldValue")
-                        .HasColumnType("text")
-                        .HasColumnName("category_old_value");
-
-                    b.Property<string>("ChangeType")
-                        .HasColumnType("text")
-                        .HasColumnName("change_type");
-
-                    b.Property<string>("NameNewValue")
-                        .HasColumnType("text")
-                        .HasColumnName("name_new_value");
-
-                    b.Property<string>("NameOldValue")
-                        .HasColumnType("text")
-                        .HasColumnName("name_old_value");
-
-                    b.Property<decimal>("PriceNewValue")
-                        .HasColumnType("numeric")
-                        .HasColumnName("price_new_value");
-
-                    b.Property<decimal>("PriceOldValue")
-                        .HasColumnType("numeric")
-                        .HasColumnName("price_old_value");
-
-                    b.Property<int>("ProductID")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("integer")
-                        .HasColumnName("product_id");
+                        .HasColumnName("category_id");
 
-                    b.Property<string>("ReductionReason")
-                        .HasColumnType("text")
-                        .HasColumnName("reduction_reason");
-
-                    b.Property<string>("StockNewValue")
-                        .HasColumnType("text")
-                        .HasColumnName("stock_new_value");
-
-                    b.Property<string>("StockOldValue")
-                        .HasColumnType("text")
-                        .HasColumnName("stock_old_value");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("timestamp");
-
-                    b.Property<int?>("UserId")
+                    b.Property<int>("CurrentStockLevel")
                         .HasColumnType("integer")
-                        .HasColumnName("user_id");
+                        .HasColumnName("current_stock_level");
 
-                    b.Property<decimal>("WholesalePriceNewValue")
+                    b.Property<string>("EAN13Barcode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ean13_barcode");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("image_path");
+
+                    b.Property<int>("MinimumStockLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("minimum_stock_level");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<decimal>("Price")
                         .HasColumnType("numeric")
-                        .HasColumnName("wholesale_price_new_value");
+                        .HasColumnName("price");
 
-                    b.Property<decimal>("WholesalePriceOldValue")
+                    b.Property<string>("Weight")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("weight");
+
+                    b.Property<decimal>("WholesalePrice")
                         .HasColumnType("numeric")
-                        .HasColumnName("wholesale_price_old_value");
+                        .HasColumnName("wholesale_price");
 
-                    b.HasKey("LogID");
+                    b.HasKey("ID");
 
-                    b.HasIndex("ProductID");
+                    b.HasIndex("CategoryId");
 
-                    b.ToTable("inventory_logs");
+                    b.ToTable("products", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Role", b =>
@@ -189,6 +164,44 @@ namespace HamAndCheeseToastie.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("roles", (string)null);
+                });
+
+            modelBuilder.Entity("HamAndCheeseToastie.Models.TransactionItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer")
+                        .HasColumnName("productid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("totalprice");
+
+                    b.Property<int>("TransactionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("transactionid");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("unitprice");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("TransactionId");
+
+                    b.ToTable("transaction_item", (string)null);
                 });
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.User", b =>
@@ -244,75 +257,6 @@ namespace HamAndCheeseToastie.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("Product", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ID"));
-
-                    b.Property<string>("BrandName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("brand_name");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("integer")
-                        .HasColumnName("category_id");
-
-                    b.Property<int?>("CategoryId1")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CurrentStockLevel")
-                        .HasColumnType("integer")
-                        .HasColumnName("current_stock_level");
-
-                    b.Property<string>("EAN13Barcode")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("ean13_barcode");
-
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("image_path");
-
-                    b.Property<int>("MinimumStockLevel")
-                        .HasColumnType("integer")
-                        .HasColumnName("minimum_stock_level");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
-                        .HasColumnName("price");
-
-                    b.Property<string>("Weight")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("weight");
-
-                    b.Property<decimal>("WholesalePrice")
-                        .HasColumnType("numeric")
-                        .HasColumnName("wholesale_price");
-
-                    b.HasKey("ID");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("CategoryId1");
-
-                    b.HasIndex("EAN13Barcode")
-                        .IsUnique();
-
-                    b.ToTable("products", (string)null);
-                });
-
             modelBuilder.Entity("Transaction", b =>
                 {
                     b.Property<int>("TransactionId")
@@ -358,66 +302,34 @@ namespace HamAndCheeseToastie.Migrations
                     b.ToTable("transaction", (string)null);
                 });
 
-            modelBuilder.Entity("TransactionItem", b =>
+            modelBuilder.Entity("HamAndCheeseToastie.Models.Product", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
+                    b.HasOne("HamAndCheeseToastie.Models.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("integer")
-                        .HasColumnName("productid");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer")
-                        .HasColumnName("quantity");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("numeric")
-                        .HasColumnName("totalprice");
-
-                    b.Property<int>("TransactionId")
-                        .HasColumnType("integer")
-                        .HasColumnName("transactionid");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("numeric")
-                        .HasColumnName("unitprice");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TransactionId");
-
-                    b.ToTable("transaction_item", (string)null);
+                    b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("HamAndCheeseToastie.Models.InventoryLog", b =>
+            modelBuilder.Entity("HamAndCheeseToastie.Models.TransactionItem", b =>
                 {
-                    b.HasOne("Product", "Product")
+                    b.HasOne("HamAndCheeseToastie.Models.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductID")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Transaction", "Transaction")
+                        .WithMany("TransactionItems")
+                        .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Product");
-                });
 
-            modelBuilder.Entity("Product", b =>
-                {
-                    b.HasOne("HamAndCheeseToastie.Models.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("HamAndCheeseToastie.Models.Category", null)
-                        .WithMany("Products")
-                        .HasForeignKey("CategoryId1");
-
-                    b.Navigation("Category");
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("Transaction", b =>
@@ -425,7 +337,7 @@ namespace HamAndCheeseToastie.Migrations
                     b.HasOne("HamAndCheeseToastie.Models.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Customer");
@@ -434,6 +346,11 @@ namespace HamAndCheeseToastie.Migrations
             modelBuilder.Entity("HamAndCheeseToastie.Models.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("Transaction", b =>
+                {
+                    b.Navigation("TransactionItems");
                 });
 #pragma warning restore 612, 618
         }

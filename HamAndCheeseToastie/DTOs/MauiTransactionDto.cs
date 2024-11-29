@@ -2,6 +2,9 @@
 {
     public class MauiTransactionDto
     {
+        internal int UserId;
+        internal int TransactionId;
+
         public int Id { get; set; }
 
         public DateTime DateTime { get; set; }

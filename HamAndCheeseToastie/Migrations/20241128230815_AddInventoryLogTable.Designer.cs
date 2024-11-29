@@ -3,6 +3,7 @@ using System;
 using HamAndCheeseToastie.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HamAndCheeseToastie.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241128230815_AddInventoryLogTable")]
+    partial class AddInventoryLogTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,19 +27,19 @@ namespace HamAndCheeseToastie.Migrations
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.Category", b =>
                 {
-                    b.Property<int>("CategoryId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CategoryId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
 
-                    b.HasKey("CategoryId");
+                    b.HasKey("Id");
 
                     b.ToTable("categories", (string)null);
                 });
@@ -170,6 +173,67 @@ namespace HamAndCheeseToastie.Migrations
                     b.ToTable("inventory_logs");
                 });
 
+            modelBuilder.Entity("HamAndCheeseToastie.Models.Product", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ID"));
+
+                    b.Property<string>("BrandName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("brand_name");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer")
+                        .HasColumnName("category_id");
+
+                    b.Property<int>("CurrentStockLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("current_stock_level");
+
+                    b.Property<string>("EAN13Barcode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ean13_barcode");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("image_path");
+
+                    b.Property<int>("MinimumStockLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("minimum_stock_level");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric")
+                        .HasColumnName("price");
+
+                    b.Property<string>("Weight")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("weight");
+
+                    b.Property<decimal>("WholesalePrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("wholesale_price");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("products", (string)null);
+                });
+
             modelBuilder.Entity("HamAndCheeseToastie.Models.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -242,75 +306,6 @@ namespace HamAndCheeseToastie.Migrations
                         .IsUnique();
 
                     b.ToTable("users", (string)null);
-                });
-
-            modelBuilder.Entity("Product", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ID"));
-
-                    b.Property<string>("BrandName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("brand_name");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("integer")
-                        .HasColumnName("category_id");
-
-                    b.Property<int?>("CategoryId1")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CurrentStockLevel")
-                        .HasColumnType("integer")
-                        .HasColumnName("current_stock_level");
-
-                    b.Property<string>("EAN13Barcode")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("ean13_barcode");
-
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("image_path");
-
-                    b.Property<int>("MinimumStockLevel")
-                        .HasColumnType("integer")
-                        .HasColumnName("minimum_stock_level");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
-                        .HasColumnName("price");
-
-                    b.Property<string>("Weight")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("weight");
-
-                    b.Property<decimal>("WholesalePrice")
-                        .HasColumnType("numeric")
-                        .HasColumnName("wholesale_price");
-
-                    b.HasKey("ID");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("CategoryId1");
-
-                    b.HasIndex("EAN13Barcode")
-                        .IsUnique();
-
-                    b.ToTable("products", (string)null);
                 });
 
             modelBuilder.Entity("Transaction", b =>
@@ -396,7 +391,7 @@ namespace HamAndCheeseToastie.Migrations
 
             modelBuilder.Entity("HamAndCheeseToastie.Models.InventoryLog", b =>
                 {
-                    b.HasOne("Product", "Product")
+                    b.HasOne("HamAndCheeseToastie.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -405,17 +400,13 @@ namespace HamAndCheeseToastie.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Product", b =>
+            modelBuilder.Entity("HamAndCheeseToastie.Models.Product", b =>
                 {
                     b.HasOne("HamAndCheeseToastie.Models.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("HamAndCheeseToastie.Models.Category", null)
                         .WithMany("Products")
-                        .HasForeignKey("CategoryId1");
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Category");
                 });
