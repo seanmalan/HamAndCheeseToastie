@@ -5,6 +5,8 @@ using System.ComponentModel.DataAnnotations;
 [Table("products")]
 public class Product
 {
+    internal string CategoryName;
+
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column("id")]

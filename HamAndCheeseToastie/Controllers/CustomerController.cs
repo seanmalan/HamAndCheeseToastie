@@ -43,6 +43,8 @@ namespace HamAndCheeseToastie.Controllers
             return Ok(customers);
         }
 
+
+
         // GET: api/Customer/5
         /// <summary>
         /// Retrieves a specific customer by their ID.
@@ -65,6 +67,34 @@ namespace HamAndCheeseToastie.Controllers
             return Ok(customer);
         }
 
+
+
+        // GET: api/Customer/search/{name}
+        /// <summary>
+        /// Searches for customers by name (first name or last name).
+        /// </summary>
+        /// <param name="name">The name to search for.</param>
+        /// <response code="200">Returns the matching customers.</response>
+        /// <response code="404">If no customers are found.</response>
+        [HttpGet("search/{name}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<IEnumerable<Customer>>> SearchCustomersByName(string name)
+        {
+            var customers = await _context.Customer
+                .Where(c => c.FirstName.Contains(name) || c.LastName.Contains(name))
+                .ToListAsync();
+
+            if (!customers.Any())
+            {
+                return NotFound(new { Message = "No customers found matching the search criteria" });
+            }
+
+            return Ok(customers);
+        }
+
+
+
         // GET: api/Customer/5/transactions
         /// <summary>
         /// Retrieves a specific customer's transactions by their ID.
@@ -77,10 +107,23 @@ namespace HamAndCheeseToastie.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> GetCustomerTransactions(int id)
         {
-            var transactions = await _context.Transaction
-                .Include(t => t.Customer)
-                .Where(t => t.CustomerId == id)
-                .ToListAsync();
+            var transactions = await (from t in _context.Transaction
+                                      join u in _context.Users on t.UserId equals u.id
+                                      join c in _context.Customer on t.CustomerId equals c.CustomerId
+                                      where t.CustomerId == id
+                                      select new
+                                      {
+                                          t.TransactionId,
+                                          t.TransactionDate,
+                                          t.TotalAmount,
+                                          t.Discount,
+                                          t.PaymentMethod,
+                                          t.TaxAmount,
+                                          t.UserId,
+                                          CashierName = u.username,
+                                          Customer = c
+                                      })
+                                    .ToListAsync();
 
             if (!transactions.Any())
             {
@@ -90,7 +133,6 @@ namespace HamAndCheeseToastie.Controllers
                 {
                     return NotFound(new { Message = "Customer not found" });
                 }
-
                 return Ok(new
                 {
                     Customer = customer,
