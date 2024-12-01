@@ -31,5 +31,7 @@ namespace HamAndCheeseToastie.Models
         public DateTime? PasswordResetTokenExpires { get; set; } // Nullable since it's optional
 
         public string? Passcode { get; set; }
+
+        public DateTime? last_login_at { get; set; }
     }
 }
