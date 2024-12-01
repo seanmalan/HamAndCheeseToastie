@@ -316,6 +316,10 @@ namespace HamAndCheeseToastie.Controllers
         }
         #endregion
 
+
+
+
+
         #region Transaction Endpoints
         /// <summary>
         /// Gets filtered transactions
@@ -360,15 +364,21 @@ namespace HamAndCheeseToastie.Controllers
                 .Select(t => new
                 {
                     t.TransactionId,
-                    TransactionDate = TimeZoneInfo.ConvertTimeFromUtc(t.TransactionDate, nzTimeZone), // Convert here
+                    TransactionDate = TimeZoneInfo.ConvertTimeFromUtc(t.TransactionDate, nzTimeZone),
                     t.TotalAmount,
                     t.Discount,
                     t.PaymentMethod,
                     t.TaxAmount,
                     t.UserId,
-                    t.CustomerId
+                    t.CustomerId,
+                    Customer = new
+                    {
+                        t.Customer.FirstName,
+                        t.Customer.LastName,
+                        FullName = t.Customer.FirstName + " " + t.Customer.LastName
+                    }
                 })
-                .ToListAsync();
+        .ToListAsync();
 
             if (!transactions.Any())
             {
@@ -612,6 +622,10 @@ namespace HamAndCheeseToastie.Controllers
         }
         #endregion
 
+
+
+
+
         #region User Endpoints
         /// <summary>
         /// Gets all users
@@ -621,11 +635,168 @@ namespace HamAndCheeseToastie.Controllers
         [HttpGet("Users")]
         public async Task<IActionResult> GetAllUsers()
         {
-            _logger.LogInformation("Fetching all users in MAUI");
-            var users = await _context.Users.ToListAsync();
-            return Ok(users);
+            try
+            {
+                var users = await _context.Users.ToListAsync();
+                var userDtos = users.Select(user =>
+                {
+                    var names = user.username.Split(' ');
+                    return new UserListDto
+                    {
+                        Id = user.id,
+                        FirstName = names.FirstOrDefault() ?? string.Empty,
+                        LastName = names.Length > 1 ? string.Join(" ", names.Skip(1)) : string.Empty,
+                        Email = user.email,
+                        Role = user.Role,
+                        Passcode = user.Passcode,
+                        last_login_at = user.last_login_at  // Add this
+                    };
+                });
+                return Ok(userDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching users");
+                return StatusCode(500, "Internal server error");
+            }
         }
 
+        /// <summary>
+        /// Gets a specific user by ID
+        /// </summary>
+        /// <param name="userId">The user ID to search for</param>
+        /// <returns>The requested user</returns>
+        /// <response code="200">Returns the requested user</response>
+        /// <response code="404">If the user is not found</response>
+        [HttpGet("Users/{userId}")]
+        public async Task<IActionResult> GetUser(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var names = user.username.Split(' ');
+            var userDto = new UserListDto
+            {
+                Id = user.id,
+                FirstName = names.FirstOrDefault() ?? string.Empty,
+                LastName = names.Length > 1 ? string.Join(" ", names.Skip(1)) : string.Empty,
+                Email = user.email,
+                Role = user.Role,
+                Passcode = user.Passcode,
+                last_login_at = user.last_login_at
+            };
+
+            return Ok(userDto);
+        }
+
+        /// <summary>
+        /// Checks if an admin user exists
+        /// </summary>
+        /// <returns>Boolean indicating if admin exists</returns>
+        /// <response code="200">Returns true if admin exists, false otherwise</response>
+        [HttpGet("Users/AdminExists")]
+        public async Task<IActionResult> CheckAdminExists()
+        {
+            var adminExists = await _context.Users
+                .AnyAsync(u => u.Role <= 2);
+            return Ok(adminExists);
+        }
+
+        /// <summary>
+        /// Creates a new user
+        /// </summary>
+        /// <param name="user">The user to create</param>
+        /// <returns>The created user</returns>
+        /// <response code="201">Returns the created user</response>
+        /// <response code="400">If the user data is invalid</response>
+        [HttpPost("Users")]
+        public async Task<IActionResult> CreateUser(User user)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetUser), new { userId = user.id }, user);
+        }
+
+        /// <summary>
+        /// Updates an existing user
+        /// </summary>
+        /// <param name="userId">The ID of the user to update</param>
+        /// <param name="user">The updated user data</param>
+        /// <returns>No content</returns>
+        /// <response code="204">If the user was successfully updated</response>
+        /// <response code="404">If the user was not found</response>
+        [HttpPut("Users/{userId}")]
+        public async Task<IActionResult> UpdateUser(int userId, UpdateUserDto updateDto)
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                user.username = updateDto.Username;
+                user.email = updateDto.Email;
+                user.Role = updateDto.Role;
+                user.Passcode = updateDto.Passcode;
+                user.last_login_at = updateDto.UpdatedAt;
+
+                try
+                {
+                    _context.Entry(user).State = EntityState.Modified;
+
+                    _context.Entry(user).Property(x => x.created_at).IsModified = false;
+                    _context.Entry(user).Property(x => x.updated_at).IsModified = false;
+
+                    _context.Entry(user).Property(x => x.password_hash).IsModified = false;
+
+                    await _context.SaveChangesAsync();
+                    return NoContent();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await UserExists(userId))
+                    {
+                        return NotFound();
+                    }
+                    throw;
+                }
+            }
+
+        /// <summary>
+        /// Deletes a specific user
+        /// </summary>
+        /// <param name="userId">The ID of the user to delete</param>
+        /// <returns>No content</returns>
+        /// <response code="204">If the user was successfully deleted</response>
+        /// <response code="404">If the user was not found</response>
+        [HttpDelete("Users/{userId}")]
+        public async Task<IActionResult> DeleteUser(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private async Task<bool> UserExists(int userId)
+        {
+            return await _context.Users.AnyAsync(e => e.id == userId);
+        }
         #endregion
 
 

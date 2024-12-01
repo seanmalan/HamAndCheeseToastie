@@ -3,6 +3,7 @@ using System;
 using HamAndCheeseToastie.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HamAndCheeseToastie.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241201005716_UpdateUsersToIncludeLastLoggedInField")]
+    partial class UpdateUsersToIncludeLastLoggedInField
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -221,9 +224,6 @@ namespace HamAndCheeseToastie.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("email");
-
-                    b.Property<DateTime?>("last_login_at")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("password_hash")
                         .IsRequired()
