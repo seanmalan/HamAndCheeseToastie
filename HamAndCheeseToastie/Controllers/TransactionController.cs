@@ -20,8 +20,8 @@ public class TransactionController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetTransactions(
-        [FromQuery] DateTime? dateFrom = null,
-        [FromQuery] DateTime? dateTo = null)
+    [FromQuery] DateTime? dateFrom = null,
+    [FromQuery] DateTime? dateTo = null)
     {
         var fromDate = (dateFrom ?? DateTime.Now.AddDays(-30)).ToUniversalTime();
         var toDate = (dateTo ?? DateTime.Now).ToUniversalTime();
@@ -38,23 +38,29 @@ public class TransactionController : ControllerBase
                 _context.Customer,
                 t => t.CustomerId,
                 c => c.CustomerId,
-                (t, c) => new
+                (t, c) => new { Transaction = t, Customer = c })
+            .Join(
+                _context.Users,
+                tc => tc.Transaction.UserId,
+                u => u.id,
+                (tc, u) => new
                 {
-                    t.TransactionId,
-                    t.TransactionDate,
-                    t.TotalAmount,
-                    t.Discount,
-                    t.PaymentMethod,
-                    t.TaxAmount,
-                    t.UserId,
+                    tc.Transaction.TransactionId,
+                    tc.Transaction.TransactionDate,
+                    tc.Transaction.TotalAmount,
+                    tc.Transaction.Discount,
+                    tc.Transaction.PaymentMethod,
+                    tc.Transaction.TaxAmount,
+                    UserId = tc.Transaction.UserId,
+                    CashierName = u.username,
                     Customer = new
                     {
-                        c.CustomerId,
-                        c.FirstName,
-                        c.LastName,
-                        c.Email,
-                        c.PhoneNumber,
-                        c.IsLoyaltyMember
+                        tc.Customer.CustomerId,
+                        tc.Customer.FirstName,
+                        tc.Customer.LastName,
+                        tc.Customer.Email,
+                        tc.Customer.PhoneNumber,
+                        tc.Customer.IsLoyaltyMember
                     }
                 })
             .ToListAsync();
@@ -103,6 +109,7 @@ public class TransactionController : ControllerBase
             t.TaxAmount,
             t.Customer,
             t.UserId,
+            t.CashierName,
             TransactionItems = transactionItems
                 .Where(ti => ti.TransactionId == t.TransactionId)
                 .Select(ti => new
@@ -155,12 +162,12 @@ public class TransactionController : ControllerBase
                     Quantity = ti.Quantity,
                     UnitPrice = ti.UnitPrice,
                     TotalPrice = ti.TotalPrice,
-                    Product = new MauiProductDto
+                    Product = new ProductDto
                     {
-                        ProductID = p.ID,
-                        ProductName = p.Name,
+                        ID = p.ID,
+                        Name = p.Name,
                         BrandName = p.BrandName,
-                        ProductWeight = p.Weight
+                        Weight = p.Weight
                     }
                 })
             .ToListAsync();

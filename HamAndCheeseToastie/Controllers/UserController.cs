@@ -48,27 +48,45 @@ namespace HamAndCheeseToastie.Controllers
             return Ok(user);
         }
 
+
+
         [HttpGet("{id}/Transactions")]
         public async Task<IActionResult> GetUserTransactions(int id)
         {
-            // First get all transactions for the user
+            // First verify if there are any transactions for this user
+            var hasTransactions = await _context.Transaction
+                .AnyAsync(t => t.UserId == id);
+
+            if (!hasTransactions)
+            {
+                return NotFound(new { Message = $"No transactions found for user with ID {id}." });
+            }
+
+            // Get all transactions for the user with customer information
             var transactions = await _context.Transaction
                 .Where(t => t.UserId == id)
-                .Select(t => new TransactionDto
-                {
-                    TransactionId = t.TransactionId,
-                    TransactionDate = t.TransactionDate,
-                    TotalAmount = t.TotalAmount,
-                    Discount = t.Discount,
-                    TaxAmount = t.TaxAmount,
-                    UserId = t.UserId,
-                    PaymentMethod = t.PaymentMethod.ToString()
-                })
+                .Join(
+                    _context.Customer,
+                    t => t.CustomerId,
+                    c => c.CustomerId,
+                    (t, c) => new TransactionDto
+                    {
+                        TransactionId = t.TransactionId,
+                        TransactionDate = t.TransactionDate,
+                        TotalAmount = t.TotalAmount,
+                        Discount = t.Discount,
+                        TaxAmount = t.TaxAmount,
+                        UserId = t.UserId,
+                        CustomerId = c.CustomerId,
+                        CustomerName = $"{c.FirstName} {c.LastName}".Trim(),
+                        PaymentMethod = t.PaymentMethod.ToString(),
+                        TransactionItems = new List<TransactionItemDto>() // Initialize empty list
+                    })
                 .ToListAsync();
 
             if (!transactions.Any())
             {
-                return NotFound(new { Message = $"No transactions found for user with ID {id}." });
+                return NotFound(new { Message = $"No transactions with customer information found for user with ID {id}." });
             }
 
             // Get all transaction IDs for this user
@@ -76,33 +94,42 @@ namespace HamAndCheeseToastie.Controllers
 
             // Get all related transaction items with their products in a single query
             var transactionItems = await _context.TransactionItem
-                .Where(ti => transactionIds.Contains(ti.TransactionId))
-                .Join(
-                    _context.Products,
-                    ti => ti.ProductId,
-                    p => p.ID,
-                    (ti, p) => new
+        .Where(ti => transactionIds.Contains(ti.TransactionId))
+        .Join(
+            _context.Products,
+            ti => ti.ProductId,
+            p => p.ID,
+            (ti, p) => new
+            {
+                TransactionId = ti.TransactionId,
+                Item = new TransactionItemDto
+                {
+                    Id = ti.Id,
+                    TransactionId = ti.TransactionId,
+                    ProductId = ti.ProductId,
+                    Quantity = ti.Quantity,
+                    UnitPrice = ti.UnitPrice,
+                    TotalPrice = ti.TotalPrice,
+                    Product = new ProductDto
                     {
-                        TransactionId = ti.TransactionId,
-                        Item = new TransactionItemDto
-                        {
-                            Id = ti.Id,
-                            ProductId = ti.ProductId,
-                            Quantity = ti.Quantity,
-                            UnitPrice = ti.UnitPrice,
-                            TotalPrice = ti.TotalPrice,
-                            Product = new MauiProductDto
-                            {
-                                ProductID = p.ID,
-                                ProductName = p.Name,
-                                BrandName = p.BrandName,
-                                ProductWeight = p.Weight
-                            }
-                        }
-                    })
-                .ToListAsync();
+                        ID = p.ID,
+                        Name = p.Name,
+                        BrandName = p.BrandName,
+                        Weight = p.Weight,
+                        CategoryId = p.CategoryId,
+                        CategoryName = p.CategoryName,
+                        CurrentStockLevel = p.CurrentStockLevel,
+                        MinimumStockLevel = p.MinimumStockLevel,
+                        Price = p.Price,
+                        WholesalePrice = p.WholesalePrice,
+                        EAN13Barcode = p.EAN13Barcode,
+                        ImagePath = p.ImagePath
+                    }
+                }
+            })
+        .ToListAsync();
 
-            // Group items by transaction and add them to the corresponding transactions
+            // Group transaction items by transaction ID and add them to corresponding transactions
             foreach (var transaction in transactions)
             {
                 transaction.TransactionItems = transactionItems

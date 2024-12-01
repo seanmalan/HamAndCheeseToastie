@@ -2,7 +2,7 @@
 
 public class TransactionItemDto
 {
-    internal MauiProductDto Product;
+    public ProductDto Product { get; set; }
 
     public int Id { get; set; }
     public int TransactionId { get; set; }       // Added to link with transaction

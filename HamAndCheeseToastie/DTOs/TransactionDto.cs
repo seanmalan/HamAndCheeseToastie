@@ -2,6 +2,8 @@
 
 public class TransactionDto
 {
+    public string CustomerName { get; set; }
+
     public int TransactionId { get; set; }  // Added back for GET/PUT operations
     public DateTime TransactionDate { get; set; }
     public decimal TotalAmount { get; set; }
