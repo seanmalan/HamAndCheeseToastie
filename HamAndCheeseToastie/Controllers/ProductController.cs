@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Hosting;
 using HamAndCheeseToastie.DTOs;
 using System.Globalization;
 using CsvHelper;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace HamAndCheeseToastie.Controllers
 {
@@ -113,31 +115,63 @@ namespace HamAndCheeseToastie.Controllers
 
             return CreatedAtAction(nameof(GetSingleProduct), new { id = product.ID }, product);
         }
-
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product, IFormFile imageFile)
+        public async Task<IActionResult> UpdateProduct(int id, [FromForm] string product, IFormFile? imageFile)
         {
-            if (product == null) return BadRequest("Product data is required");
+            try
+            {
+                if (string.IsNullOrEmpty(product))
+                    return BadRequest("Product data is required");
 
-            var existingProduct = await _context.Products.FirstOrDefaultAsync(p => p.ID == id);
-            if (existingProduct == null) return NotFound();
+                // Deserialize with case-insensitive option and handle null values
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
 
-            existingProduct.Name = product.Name;
-            existingProduct.BrandName = product.BrandName;
-            existingProduct.Weight = product.Weight;
-            existingProduct.CategoryId = product.CategoryId;
-            existingProduct.CurrentStockLevel = product.CurrentStockLevel;
-            existingProduct.MinimumStockLevel = product.MinimumStockLevel;
-            existingProduct.Price = product.Price;
-            existingProduct.WholesalePrice = product.WholesalePrice;
-            existingProduct.EAN13Barcode = product.EAN13Barcode;
-            existingProduct.ImagePath = await SaveImageFileAsync(imageFile, existingProduct.ImagePath);
+                var productData = JsonSerializer.Deserialize<Product>(product, options);
 
-            await _context.SaveChangesAsync();
-            return NoContent();
+                if (productData == null)
+                    return BadRequest("Invalid product data");
+
+                if (productData.CategoryId <= 0)
+                    return BadRequest("Invalid CategoryId");
+
+                var existingProduct = await _context.Products.FirstOrDefaultAsync(p => p.ID == id);
+                if (existingProduct == null)
+                    return NotFound();
+
+                // Update properties with null checking
+                existingProduct.Name = productData.Name ?? existingProduct.Name;
+                existingProduct.BrandName = productData.BrandName ?? existingProduct.BrandName;
+                existingProduct.Weight = productData.Weight ?? existingProduct.Weight;
+                existingProduct.CategoryId = productData.CategoryId;
+                existingProduct.CurrentStockLevel = productData.CurrentStockLevel;
+                existingProduct.MinimumStockLevel = productData.MinimumStockLevel;
+                existingProduct.Price = productData.Price;
+                existingProduct.WholesalePrice = productData.WholesalePrice;
+                existingProduct.EAN13Barcode = productData.EAN13Barcode ?? existingProduct.EAN13Barcode;
+
+                if (imageFile != null)
+                {
+                    existingProduct.ImagePath = await SaveImageFileAsync(imageFile, existingProduct.ImagePath);
+                }
+
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+            catch (JsonException ex)
+            {
+                return BadRequest($"Invalid JSON format: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error updating product: {ex.Message}");
+            }
         }
 
         [HttpDelete("{id}")]
