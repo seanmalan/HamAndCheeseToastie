@@ -30,6 +30,7 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<TokenCacheService>();
 builder.Services.AddScoped<ICsvReader, CsvReaderService>();
 builder.Services.AddSingleton<EmailService>();
+builder.Services.AddSingleton<IRsaService, RsaService>();
 
 
 // Configure JWT Authentication
