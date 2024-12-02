@@ -1,15 +1,18 @@
 ﻿using HamAndCheeseToastie.Database;
 using HamAndCheeseToastie.DTOs;
+using HamAndCheeseToastie.Extensions;
 using HamAndCheeseToastie.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
 
 namespace HamAndCheeseToastie.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
@@ -23,29 +26,19 @@ namespace HamAndCheeseToastie.Controllers
             _logger = logger;
         }
 
-        // GET: api/User
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
-            _logger.LogInformation("Fetching all users");
             var users = await _context.Users.ToListAsync();
-            return Ok(users);
+            return Ok(await users.ToDtosAsync(_context));
         }
 
-        // GET: api/User/5
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            _logger.LogInformation("Fetching user with ID {UserId}", id);
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.id == id);
-
-            if (user == null)
-            {
-                _logger.LogWarning("User with ID {UserId} not found", id);
-                return NotFound(new { message = "User not found" });
-            }
-
-            return Ok(user);
+            var requestedUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.id == id);
+                return Ok(await requestedUser.ToDtoAsync(_context));
         }
 
 
