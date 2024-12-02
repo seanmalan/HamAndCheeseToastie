@@ -558,7 +558,7 @@ namespace HamAndCheeseToastie.Controllers
 
 
         [HttpPost("Transactions/{transactionId}/Items")]
-        public async Task<ActionResult> PostTransactionItems(int transactionId, [FromBody] List<TransactionItemDto> items)
+        public async Task<ActionResult> PostTransactionItems(int transactionId, [FromBody] List<MauiTransactionItemsDto> items)
         {
             if (!ModelState.IsValid)
             {
@@ -567,12 +567,11 @@ namespace HamAndCheeseToastie.Controllers
 
             try
             {
-                // Start a transaction to ensure both operations complete or neither does
                 using var transaction = await _context.Database.BeginTransactionAsync();
 
                 try
                 {
-                    // First, add the transaction items
+                    // Modified to only use the fields we're sending
                     var transactionItems = items.Select(item => new TransactionItem
                     {
                         TransactionId = transactionId,
@@ -584,7 +583,6 @@ namespace HamAndCheeseToastie.Controllers
 
                     await _context.TransactionItem.AddRangeAsync(transactionItems);
 
-                    // Now update the product stock levels
                     foreach (var item in items)
                     {
                         var product = await _context.Products
@@ -593,12 +591,10 @@ namespace HamAndCheeseToastie.Controllers
                         if (product != null)
                         {
                             product.CurrentStockLevel -= item.Quantity;
-                            // Ensure stock level doesn't go negative
                             if (product.CurrentStockLevel < 0)
                             {
                                 product.CurrentStockLevel = 0;
                             }
-
                             _context.Products.Update(product);
                         }
                     }
@@ -610,7 +606,6 @@ namespace HamAndCheeseToastie.Controllers
                 }
                 catch (Exception)
                 {
-                    // If anything goes wrong, roll back both operations
                     await transaction.RollbackAsync();
                     throw;
                 }
