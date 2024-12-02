@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations;
 [Table("products")]
 public class Product
 {
-    internal string CategoryName;
 
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -45,4 +44,7 @@ public class Product
 
     [Column("image_path")]
     public string ImagePath { get; set; } = string.Empty;
+
+    [NotMapped]
+    public string CategoryName => Category?.Name ?? string.Empty;
 }
