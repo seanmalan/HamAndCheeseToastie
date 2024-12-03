@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
 
 namespace HamAndCheeseToastie.Controllers
 {
@@ -40,13 +41,20 @@ namespace HamAndCheeseToastie.Controllers
         private readonly TokenCacheService _tokenCacheService;
         private readonly TokenService _tokenService;
         private readonly EmailService _emailService;
+        private readonly IRsaService _rsaService;
 
-        public AuthController(DatabaseContext context, TokenCacheService tokenCacheService, TokenService tokenService, EmailService emailService)
+        public AuthController(
+        DatabaseContext context,
+        TokenCacheService tokenCacheService,
+        TokenService tokenService,
+        EmailService emailService,
+        IRsaService rsaService)
         {
             _context = context;
             _tokenCacheService = tokenCacheService;
             _tokenService = tokenService;
             _emailService = emailService;
+            _rsaService = rsaService;
         }
 
         /// <summary>
@@ -86,39 +94,56 @@ namespace HamAndCheeseToastie.Controllers
         }
 
 
-        /// <summary>
-        /// Logs in a user and returns a token.
-        /// </summary>
-        /// <param name="request">The login details, including email and password.</param>
-        /// <returns>A token if the login is successful; otherwise, an error message.</returns>
+        #region Login
+
+        [HttpGet("public-key")]
+        public IActionResult GetPublicKey()
+        {
+            return Ok(new { publicKey = _rsaService.GetPublicKey() });
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.email == request.Email);
-            if (user == null)
+            try
             {
-                return Unauthorized(new { message = "Invalid email or password." });
+                string decryptedPassword = _rsaService.DecryptPassword(request.Password);
+
+                var user = await _context.Users.SingleOrDefaultAsync(u => u.email == request.Email);
+                if (user == null)
+                {
+                    return Unauthorized(new { message = "Invalid email or password." });
+                }
+
+                var hasher = new PasswordHasher<User>();
+                var result = hasher.VerifyHashedPassword(user, user.password_hash, decryptedPassword);
+                if (result == PasswordVerificationResult.Failed)
+                {
+                    return Unauthorized(new { message = "Invalid email or password." });
+                }
+
+                var token = _tokenService.GenerateToken(user.id.ToString());
+                _tokenCacheService.CacheToken(token, user.id.ToString());
+
+                return Ok(new
+                {
+                    Token = token,
+                    Username = user.username,
+                    Email = user.email,
+                    Role = user.Role,
+                    Id = user.id
+                });
             }
-
-            var hasher = new PasswordHasher<User>();
-            var result = hasher.VerifyHashedPassword(user, user.password_hash, request.Password);
-            if (result == PasswordVerificationResult.Failed)
+            catch (CryptographicException ex)
             {
-                return Unauthorized(new { message = "Invalid email or password." });
+                // Log the exception details for debugging
+                Console.WriteLine($"Decryption error: {ex.Message}");
+                return BadRequest(new { message = "Invalid encrypted data" });
             }
-
-            var token = _tokenService.GenerateToken(user.id.ToString());
-            _tokenCacheService.CacheToken(token, user.id.ToString());
-
-            return Ok(new
-            {
-                Token = token,
-                Username = user.username,
-                Email = user.email,
-                Role = user.Role,
-                Id = user.id
-            });
         }
+
+
+        #endregion
 
         /// <summary>
         /// Validates a token to check if it is still active.
